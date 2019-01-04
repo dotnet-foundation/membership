@@ -1,0 +1,39 @@
+trigger:
+  branches:
+    include:
+      - master
+      - rel/*
+
+pr:
+  branches:
+    include:
+      - master
+      - rel/*
+
+pool:
+  vmImage: vs2017-win2016
+
+variables: 
+  BuildConfiguration: Release
+
+steps:
+
+- task: DotNetCoreInstaller@0
+  inputs:
+    version: '2.2.101'
+
+- task: DotNetCoreCLI@2
+  displayName: Build and Publish
+  inputs:
+    command: publish
+    publishWebProjects: false
+    projects: Membership/Membership.csproj
+    arguments: '-c $(BuildConfiguration) --output $(build.artifactstagingdirectory)\website\'
+    zipAfterPublish: True
+
+- task: PublishBuildArtifacts@1
+  displayName: Publish website Artifact
+  inputs:
+    pathToPublish: $(Build.ArtifactStagingDirectory)\website
+    artifactType: container
+    artifactName: Website
