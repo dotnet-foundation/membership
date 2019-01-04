@@ -12,6 +12,8 @@ namespace Membership
 {
     public class Program
     {
+        public static string AssemblyInformationalVersion => ThisAssembly.AssemblyInformationalVersion;
+
         public static void Main(string[] args)
         {
             CreateWebHostBuilder(args).Build().Run();
