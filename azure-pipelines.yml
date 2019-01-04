@@ -15,6 +15,7 @@ pool:
 
 variables: 
   BuildConfiguration: Release
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
 steps:
 
