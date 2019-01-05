@@ -65,11 +65,13 @@ namespace Membership
             {
                 options.Authority = options.Authority + "/v2.0/";         // Azure AD v2.0
                 options.SaveTokens = true;
+                options.UseTokenLifetime = true; // we need the access token to always be valid
                 options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
 
                 options.Scope.Add("User.ReadWrite");
                 options.Scope.Add("User.ReadBasic.All");
 
+                
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
             });
