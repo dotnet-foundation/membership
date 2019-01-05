@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Membership.Models;
+using Membership.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,29 +19,18 @@ namespace Membership.Controllers
     [Authorize]
     public class ProfileController : Controller
     {
-        private readonly IGraphServiceClient _graphClient;
+        private readonly UsersService _usersService;
 
-        public ProfileController(IGraphServiceClient graphClient)
+        public ProfileController(UsersService usersService)
         {
-            _graphClient = graphClient;
+            _usersService = usersService;
         }
 
         public async Task<IActionResult> Index()
         {
-            var user = await _graphClient.Me.Request().GetAsync();
+            var member = await _usersService.GetMe();
 
-
-            // check email in two places: 1 Mail, 2 Other Mails
-            var email = user.Mail ?? user.OtherMails?.FirstOrDefault();
-
-            var member = new MemberModel()
-            {
-                DisplayName = user.DisplayName,
-                Email = email,
-                FirstName = user.GivenName,
-                LastName = user.Surname
-            };
-
+            
             return View(member);
         }
     }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Membership.Services;
 using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
@@ -104,6 +105,8 @@ namespace Membership
                         .Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 }));
             });
+
+            services.AddScoped<UsersService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
