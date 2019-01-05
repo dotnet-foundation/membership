@@ -15,8 +15,6 @@ namespace Membership.Controllers
     {
         public IActionResult Index()
         {
-            //var token = await HttpContext.GetTokenAsync("access_token");
-            
             return View();
         }
 
