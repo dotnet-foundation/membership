@@ -2,8 +2,13 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights.AspNetCore;
+using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.ApplicationInsights.SnapshotCollector;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -17,6 +22,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Graph;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Membership
@@ -33,6 +41,13 @@ namespace Membership
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // https://github.com/dotnet/coreclr/issues/21743 there's a regression in 2.2 for now
+            // Configure SnapshotCollector from application settings
+            //services.Configure<SnapshotCollectorConfiguration>(Configuration.GetSection(nameof(SnapshotCollectorConfiguration)));
+
+            // Add SnapshotCollector telemetry processor.
+            //    services.AddSingleton<ITelemetryProcessorFactory>(sp => new SnapshotCollectorTelemetryProcessorFactory(sp));
+
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 
@@ -73,10 +88,27 @@ namespace Membership
                 options.Filters.Add(new AuthorizeFilter(policy));
             })
             .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+            services.AddScoped<IGraphServiceClient>(sp =>
+            {
+                var context = sp.GetRequiredService<IHttpContextAccessor>();
+                return new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
+                {
+                    var accessToken = await context.HttpContext.GetTokenAsync("access_token");
+                    requestMessage
+                        .Headers
+                        .Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                }));
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app,
+                              ILoggerFactory loggerFactory,
+                              IServiceProvider serviceProvider,
+                              IHostingEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -88,6 +120,10 @@ namespace Membership
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+            loggerFactory.AddApplicationInsights(serviceProvider, LogLevel.Information);
+
+            TelemetryConfiguration.Active.TelemetryInitializers.Add(new VersionTelemetry());
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
@@ -101,6 +137,29 @@ namespace Membership
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+        }
+
+
+        class SnapshotCollectorTelemetryProcessorFactory : ITelemetryProcessorFactory
+        {
+            readonly IServiceProvider _serviceProvider;
+
+            public SnapshotCollectorTelemetryProcessorFactory(IServiceProvider serviceProvider) =>
+                _serviceProvider = serviceProvider;
+
+            public ITelemetryProcessor Create(ITelemetryProcessor next)
+            {
+                var snapshotConfigurationOptions = _serviceProvider.GetService<IOptions<SnapshotCollectorConfiguration>>();
+                return new SnapshotCollectorTelemetryProcessor(next, configuration: snapshotConfigurationOptions.Value);
+            }
+        }
+
+        class VersionTelemetry : ITelemetryInitializer
+        {
+            public void Initialize(ITelemetry telemetry)
+            {
+                telemetry.Context.Component.Version = Program.AssemblyInformationalVersion;
+            }
         }
     }
 }

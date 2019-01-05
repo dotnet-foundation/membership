@@ -18,31 +18,20 @@ namespace Membership.Controllers
     [Authorize]
     public class ProfileController : Controller
     {
+        private readonly IGraphServiceClient _graphClient;
+
+        public ProfileController(IGraphServiceClient graphClient)
+        {
+            _graphClient = graphClient;
+        }
+
         public async Task<IActionResult> Index()
         {
-            var accessToken = await HttpContext.GetTokenAsync("access_token");
-            var graphServiceClient = new GraphServiceClient(new DelegateAuthenticationProvider((requestMessage) =>
-            {
-                requestMessage
-                    .Headers
-                    .Authorization = new AuthenticationHeaderValue("bearer", accessToken);
-
-                return Task.FromResult(0);
-            }));
-            graphServiceClient.BaseUrl = "https://graph.microsoft.com/beta";
+            var user = await _graphClient.Me.Request().GetAsync();
 
 
-            var user = await graphServiceClient.Me.Request().GetAsync();
-
-
-            JArray otherMails = null;
-            if (user.AdditionalData.ContainsKey("otherMails"))
-            {
-                otherMails = user.AdditionalData["otherMails"] as JArray;
-            }
-            
-            var email = otherMails?.FirstOrDefault()?.Value<string>();
-
+            // check email in two places: 1 Mail, 2 Other Mails
+            var email = user.Mail ?? user.OtherMails?.FirstOrDefault();
 
             var member = new MemberModel()
             {
