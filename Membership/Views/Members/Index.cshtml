@@ -12,10 +12,10 @@
                 @Html.DisplayNameFor(model => model.IsActive)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.LastName)
+                @Html.DisplayNameFor(model => model.Surname)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.FirstName)
+                @Html.DisplayNameFor(model => model.GivenName)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.DisplayName)
@@ -41,10 +41,10 @@
                 @Html.DisplayFor(modelItem => item.IsActive)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.LastName)
+                @Html.DisplayFor(modelItem => item.Surname)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.FirstName)
+                @Html.DisplayFor(modelItem => item.GivenName)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.DisplayName)
@@ -59,7 +59,7 @@
                 @Html.DisplayFor(modelItem => item.Expiration)
             </td>
             <td>
-                @Html.ActionLink("Details", "Details", new { id = item.Id })
+                @Html.ActionLink("Edit", "Edit", new { id = item.Id })
             </td>
         </tr>
         }

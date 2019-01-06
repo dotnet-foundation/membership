@@ -45,9 +45,31 @@ namespace Membership.Services
 
             // Graph can't sort by surname?
 
-            items = items.OrderBy(m => m.LastName).ToList();
+            items = items.OrderBy(m => m.Surname).ToList();
 
             return items;
+        }
+
+        public async Task<MemberModel> GetMemberById(string id)
+        {
+            var user = await _graphClient.Users[id].Request().GetAsync();
+
+            return FromUser(user);
+        }
+
+        public async Task UpdateMemberAsync(string id, string displayName, bool? isActive, string givenName, string surname, string githubId, DateTimeOffset? expiration)
+        {
+            if (string.IsNullOrWhiteSpace(displayName))
+            {
+                throw new ArgumentException("Argument cannot be blank when configured is true", nameof(displayName));
+            }
+
+            var user = await _graphClient.Users[id].Request().UpdateAsync(new User
+            {
+                DisplayName = displayName,
+                GivenName = givenName,
+                Surname = surname
+            });
         }
 
         private static MemberModel FromUser(User user)
@@ -60,8 +82,8 @@ namespace Membership.Services
                 Id = user.Id,
                 DisplayName = user.DisplayName,
                 Email = email,
-                FirstName = user.GivenName,
-                LastName = user.Surname
+                GivenName = user.GivenName,
+                Surname = user.Surname
             };
 
             return member;
