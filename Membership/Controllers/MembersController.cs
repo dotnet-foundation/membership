@@ -25,7 +25,7 @@ namespace Membership.Controllers
 
             return View(users);
         }
-
+        
         public async Task<IActionResult> Edit(string id)
         {
             try
