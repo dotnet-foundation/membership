@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Membership.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 
 namespace Membership.Services
@@ -11,31 +13,37 @@ namespace Membership.Services
     {
         private readonly IGraphServiceClient _graphClient;
 
-        public UsersService(IGraphServiceClient graphClient)
+        private readonly IHttpContextAccessor _context;
+        private readonly string _membersGroupId;
+
+        public UsersService(IGraphServiceClient graphClient, IHttpContextAccessor context, IOptions<AdminConfig> options)
         {
             _graphClient = graphClient;
+            _context = context;
+            _membersGroupId = options.Value.MembersGroupId;
         }
 
         // Get the current user's profile.
         public async Task<MemberModel> GetMe()
         {
             // Get the current user's profile.
-            var user = await _graphClient.Me.Request().GetAsync();
+            var oid = _context.HttpContext.User.FindFirst("oid").Value;
 
-            return FromUser(user);
+            return await GetMemberById(oid);
         }
 
         public async Task<List<MemberModel>> GetAllMembers()
         {
             var items = new List<MemberModel>();
 
-            // Get users.
-            var userRequest = _graphClient.Users.Request();//.Filter("userType eq 'Guest'");
+            // Get users in the group
+        
+            var userRequest = _graphClient.Groups[_membersGroupId].Members.Request();
 
             do
             {
                 var users = await userRequest.GetAsync();
-                foreach (var user in users)
+                foreach (User user in users)
                 {
                     items.Add(FromUser(user));
                 }

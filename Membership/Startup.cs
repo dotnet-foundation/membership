@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Membership.Models;
 using Membership.Services;
 using Microsoft.ApplicationInsights.AspNetCore;
 using Microsoft.ApplicationInsights.Channel;
@@ -26,6 +27,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
+using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Membership
@@ -65,16 +67,11 @@ namespace Membership
             services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
             {
                 options.Authority = options.Authority + "/v2.0/";         // Azure AD v2.0
-                options.SaveTokens = true;
-                options.UseTokenLifetime = true; // we need the access token to always be valid
-                options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
-
-                options.Scope.Add("User.ReadWrite");
-                options.Scope.Add("User.ReadBasic.All");
-
+                options.ResponseType = OpenIdConnectResponseType.IdToken;           
                 
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
+
             });
 
             services.Configure<JwtBearerOptions>(AzureADDefaults.JwtBearerAuthenticationScheme, options =>
@@ -82,6 +79,7 @@ namespace Membership
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
             });
+
 
             services.AddMvc(options =>
             {
@@ -94,19 +92,25 @@ namespace Membership
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-            services.AddScoped<IGraphServiceClient>(sp =>
+
+            services.Configure<AdminConfig>(options => options.MembersGroupId = Configuration["AzureAd:MembersGroupId"]);
+
+            services.AddSingleton<IGraphServiceClient>(sp =>
             {
-                var context = sp.GetRequiredService<IHttpContextAccessor>();
+                var oidc = sp.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(AzureADDefaults.OpenIdScheme);
+                var app = new ConfidentialClientApplication(oidc.ClientId, oidc.Authority, "https://not/used", new ClientCredential(oidc.ClientSecret), null, new TokenCache());
+                
                 return new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
                 {
-                    var accessToken = await context.HttpContext.GetTokenAsync("access_token");
+                    var accessToken = await app.AcquireTokenForClientAsync(new[] { "https://graph.microsoft.com/.default" });
+
                     requestMessage
                         .Headers
-                        .Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+                        .Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
                 }));
             });
 
-            services.AddScoped<UsersService>();
+            services.AddSingleton<UsersService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -126,7 +130,7 @@ namespace Membership
                 app.UseHsts();
             }
 
-            loggerFactory.AddApplicationInsights(serviceProvider, LogLevel.Information);
+            loggerFactory.AddApplicationInsights(serviceProvider, Microsoft.Extensions.Logging.LogLevel.Information);
 
             TelemetryConfiguration.Active.TelemetryInitializers.Add(new VersionTelemetry());
 
