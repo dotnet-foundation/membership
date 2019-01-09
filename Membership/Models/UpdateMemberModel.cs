@@ -21,5 +21,12 @@ namespace Membership.Models
         public string GitHubId { get; set; }
         public string TwitterId { get; set; }
         public string BlogUrl { get; set; }
+
+        public int PhotoWidth { get; set; }
+        public int PhotoHeight { get; set; }
+
+        public string PhotoType { get; set; }
+
+        public byte[] PhotoBytes { get; set; }
     }
 }

@@ -6,6 +6,13 @@
 
 <h2>Edit</h2>
 <h4>Update Member @Model.DisplayName</h4>
+
+@if (Model.PhotoBytes != null)
+{
+
+    <img style="max-height:250px;max-width:250px;" height="@Model.PhotoHeight" width="@Model.PhotoWidth" src="data:@Model.PhotoType;base64,@Convert.ToBase64String(Model.PhotoBytes)" />
+}
+
 <hr />
 <div class="row">
     <div class="col-md-4">

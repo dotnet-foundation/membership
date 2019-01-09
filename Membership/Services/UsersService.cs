@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Membership.Models;
@@ -62,6 +63,33 @@ namespace Membership.Services
         public async Task<MemberModel> GetMemberById(string id)
         {
             var user = await _graphClient.Users[id].Request().Select("dotnetfoundation_member,givenName,surname,mail,otherMails,displayName").GetAsync();
+
+            try
+            {
+                var photo = await _graphClient.Users[id].Photo.Request().GetAsync();
+                user.Photo = photo;
+
+                // got a photo, now get the contents
+                // Get my photo.
+                using (var photoStream = await _graphClient.Users[id].Photo.Content.Request().GetAsync())
+                {
+                    if (photoStream != null)
+                    {
+
+                        // Get byte[] for display.
+                        using (var reader = new BinaryReader(photoStream))
+                        {
+                            var data = reader.ReadBytes((int)photoStream.Length);
+                            user.Photo.AdditionalData["data"] = data;
+                        }
+                    }
+                }
+
+            }
+            catch(ServiceException)
+            {
+                // not present
+            }
 
             return FromUser(user);
         }
@@ -126,6 +154,14 @@ namespace Membership.Services
 
                 if(ext.ExpirationDateTime.HasValue)
                     member.Expiration = ext.ExpirationDateTime.Value;
+            }
+
+            if(user.Photo != null && user.Photo.AdditionalData.ContainsKey("data"))
+            {
+                member.PhotoHeight = user.Photo.Height.GetValueOrDefault();
+                member.PhotoWidth = user.Photo.Width.GetValueOrDefault();
+                member.PhotoType = user.Photo.AdditionalData["@odata.mediaContentType"] as string;
+                member.PhotoBytes = user.Photo.AdditionalData["data"] as byte[];
             }
 
             return member;

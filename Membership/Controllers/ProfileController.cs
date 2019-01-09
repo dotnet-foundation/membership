@@ -40,8 +40,13 @@ namespace Membership.Controllers
                 TwitterId = member.TwitterId,
                 BlogUrl = member.BlogUrl,
                 Expiration = member.Expiration,
-                IsActive = member.IsActive
+                IsActive = member.IsActive,
+                PhotoHeight = member.PhotoHeight,
+                PhotoWidth = member.PhotoWidth,
+                PhotoType = member.PhotoType,
+                PhotoBytes = member.PhotoBytes
             };
+            
 
             return View(member);
         }
