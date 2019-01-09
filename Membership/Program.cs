@@ -12,7 +12,7 @@ namespace Membership
 {
     public class Program
     {
-        public static string AssemblyInformationalVersion = "1.0";// => ThisAssembly.AssemblyInformationalVersion;
+        public static string AssemblyInformationalVersion => ThisAssembly.AssemblyInformationalVersion;
 
         public static void Main(string[] args)
         {
