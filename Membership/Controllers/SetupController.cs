@@ -25,6 +25,7 @@ namespace Membership.Controllers
 
         public async Task<IActionResult> RegisterSchemaExtensions()
         {
+            await Task.Delay(0);
             //var extensions = await _graphDelegatedClient.SchemaExtensions.Request().AddAsync(new SchemaExtension
             //{
             //    Id = "dotnetfoundation_member",

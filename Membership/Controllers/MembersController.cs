@@ -39,6 +39,8 @@ namespace Membership.Controllers
                     Surname = member.Surname,
                     DisplayName = member.DisplayName,
                     GitHubId = member.GitHubId,
+                    TwitterId = member.TwitterId,
+                    BlogUrl = member.BlogUrl,
                     Expiration = member.Expiration,
                     IsActive = member.IsActive
                 };
@@ -64,7 +66,7 @@ namespace Membership.Controllers
 
             try
             {
-                await _usersService.UpdateMemberAsync(id, model.DisplayName, model.IsActive, model.GivenName, model.Surname, model.GitHubId, model.Expiration);
+                await _usersService.UpdateMemberAsync(id, model.DisplayName, null, null, model.GivenName, model.Surname, model.GitHubId, model.TwitterId, model.BlogUrl);
 
                 return RedirectToAction(nameof(Index));
             }

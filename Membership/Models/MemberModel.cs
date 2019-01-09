@@ -15,5 +15,7 @@ namespace Membership.Models
         public DateTimeOffset Expiration { get; set; }
         public string Email { get; set; }
         public string GitHubId { get; set; }
+        public string TwitterId { get; set; }
+        public string BlogUrl { get; set; }
     }
 }

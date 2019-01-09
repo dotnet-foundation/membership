@@ -24,10 +24,9 @@
                 <input asp-for="Surname" class="form-control" />
                 <span asp-validation-for="Surname" class="text-danger"></span>
             </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsActive" readonly /> @Html.DisplayNameFor(model => model.IsActive)
-                </label>
+            <div class="form-group">
+                <label asp-for="IsActive" class="control-label"></label>
+                <label>@Html.ValueFor(model => model.IsActive)</label>
             </div>
             <div class="form-group">
                 <label asp-for="Expiration" class="control-label"></label>
@@ -38,6 +37,16 @@
                 <label asp-for="GitHubId" class="control-label"></label>
                 <input asp-for="GitHubId" class="form-control" />
                 <span asp-validation-for="GitHubId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TwitterId" class="control-label"></label>
+                @@<input asp-for="TwitterId" class="form-control" />
+                <span asp-validation-for="TwitterId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="BlogUrl" class="control-label"></label>
+                <input asp-for="BlogUrl" class="form-control" />
+                <span asp-validation-for="BlogUrl" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />

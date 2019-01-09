@@ -37,6 +37,8 @@ namespace Membership.Controllers
                 Surname = member.Surname,
                 DisplayName = member.DisplayName,
                 GitHubId = member.GitHubId,
+                TwitterId = member.TwitterId,
+                BlogUrl = member.BlogUrl,
                 Expiration = member.Expiration,
                 IsActive = member.IsActive
             };
@@ -57,7 +59,7 @@ namespace Membership.Controllers
             {
                 var oid = User.FindFirst("oid").Value; // ignore any params and use the claims
 
-                await _usersService.UpdateMemberAsync(oid, model.DisplayName, null, model.GivenName, model.Surname, model.GitHubId, null);
+                await _usersService.UpdateMemberAsync(oid, model.DisplayName, null, null, model.GivenName, model.Surname, model.GitHubId, model.TwitterId, model.BlogUrl);
 
                 return RedirectToAction(nameof(Index));
             }

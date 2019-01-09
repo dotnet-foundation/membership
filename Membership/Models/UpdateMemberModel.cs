@@ -19,5 +19,7 @@ namespace Membership.Models
         public bool IsActive { get; set; }
         public DateTimeOffset Expiration { get; set; }
         public string GitHubId { get; set; }
+        public string TwitterId { get; set; }
+        public string BlogUrl { get; set; }
     }
 }
