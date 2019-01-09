@@ -16,7 +16,7 @@ namespace Membership.Services
         private readonly IHttpContextAccessor _context;
         private readonly string _membersGroupId;
 
-        public UsersService(IGraphServiceClient graphClient, IHttpContextAccessor context, IOptions<AdminConfig> options)
+        public UsersService(IGraphApplicationClient graphClient, IHttpContextAccessor context, IOptions<AdminConfig> options)
         {
             _graphClient = graphClient;
             _context = context;

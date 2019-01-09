@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Membership.Models;
@@ -67,8 +68,10 @@ namespace Membership
             services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
             {
                 options.Authority = options.Authority + "/v2.0/";         // Azure AD v2.0
-                options.ResponseType = OpenIdConnectResponseType.IdToken;           
-                
+                options.ResponseType = OpenIdConnectResponseType.IdToken;
+                options.SaveTokens = true;
+                options.UseTokenLifetime = true;
+
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
 
@@ -95,19 +98,36 @@ namespace Membership
 
             services.Configure<AdminConfig>(options => options.MembersGroupId = Configuration["AzureAd:MembersGroupId"]);
 
-            services.AddSingleton<IGraphServiceClient>(sp =>
+            services.AddSingleton<IGraphApplicationClient>(sp =>
             {
                 var oidc = sp.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(AzureADDefaults.OpenIdScheme);
                 var app = new ConfidentialClientApplication(oidc.ClientId, oidc.Authority, "https://not/used", new ClientCredential(oidc.ClientSecret), null, new TokenCache());
                 
-                return new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
+                return new GraphClient(new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
                 {
                     var accessToken = await app.AcquireTokenForClientAsync(new[] { "https://graph.microsoft.com/.default" });
 
                     requestMessage
                         .Headers
                         .Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
-                }));
+                })));
+            });
+
+            services.AddScoped<IGraphDelegatedClient>(sp =>
+            {
+                var oidc = sp.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(AzureADDefaults.OpenIdScheme);
+                var app = new ConfidentialClientApplication(oidc.ClientId, oidc.Authority, "https://not/used", new ClientCredential(oidc.ClientSecret), new TokenCache(), new TokenCache());
+
+                return new GraphClient(new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
+                {
+
+                    var ctx = await sp.GetRequiredService<IHttpContextAccessor>().HttpContext.GetTokenAsync("id_token");
+                    var accessToken = await app.AcquireTokenOnBehalfOfAsync(new[] { "https://graph.microsoft.com/Directory.AccessAsUser.All" }, new UserAssertion(ctx));
+
+                    requestMessage
+                        .Headers
+                        .Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
+                })));
             });
 
             services.AddSingleton<UsersService>();
