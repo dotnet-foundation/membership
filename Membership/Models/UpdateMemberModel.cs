@@ -30,7 +30,7 @@ namespace Membership.Models
 
         public byte[] PhotoBytes { get; set; }
 
-        [Display(Name = "Profile Photo (max 100kb)")]        
+        [Display(Name = "Profile Photo (jpeg, max 100kb)")]        
         public IFormFile PhotoUpload { get; set; }
     }
 }

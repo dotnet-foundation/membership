@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Membership.Models;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
@@ -14,15 +14,18 @@ namespace Membership.Services
 {
     public class UsersService
     {
-        private readonly IGraphServiceClient _graphClient;
-
+        private readonly IGraphServiceClient _graphApplicationClient;
+        private readonly IGraphDelegatedClient _graphDelegatedClient;
         private readonly IHttpContextAccessor _context;
+        private readonly IOptionsMonitor<OpenIdConnectOptions> _oidcOptions;
         private readonly string _membersGroupId;
 
-        public UsersService(IGraphApplicationClient graphClient, IHttpContextAccessor context, IOptions<AdminConfig> options)
+        public UsersService(IGraphApplicationClient graphClient, IGraphDelegatedClient graphDelegatedClient, IHttpContextAccessor context, IOptions<AdminConfig> options, IOptionsMonitor<OpenIdConnectOptions> oidcOptions)
         {
-            _graphClient = graphClient;
+            _graphApplicationClient = graphClient;
+            _graphDelegatedClient = graphDelegatedClient;
             _context = context;
+            _oidcOptions = oidcOptions;
             _membersGroupId = options.Value.MembersGroupId;
         }
 
@@ -41,7 +44,7 @@ namespace Membership.Services
 
             // Get users in the group
 
-            var userRequest = _graphClient.Groups[_membersGroupId].Members.Request().Select("dotnetfoundation_member,givenName,surname,mail,otherMails,displayName");
+            var userRequest = _graphApplicationClient.Groups[_membersGroupId].Members.Request().Select("dotnetfoundation_member,givenName,surname,mail,otherMails,displayName");
 
             do
             {
@@ -63,16 +66,16 @@ namespace Membership.Services
 
         public async Task<MemberModel> GetMemberById(string id)
         {
-            var user = await _graphClient.Users[id].Request().Select("dotnetfoundation_member,givenName,surname,mail,otherMails,displayName").GetAsync();
+            var user = await _graphApplicationClient.Users[id].Request().Select("dotnetfoundation_member,givenName,surname,mail,otherMails,displayName").GetAsync();
 
             try
             {
-                var photo = await _graphClient.Users[id].Photo.Request().GetAsync();
+                var photo = await _graphApplicationClient.Users[id].Photo.Request().GetAsync();
                 user.Photo = photo;
 
                 // got a photo, now get the contents
                 // Get my photo.
-                using (var photoStream = await _graphClient.Users[id].Photo.Content.Request().GetAsync())
+                using (var photoStream = await _graphApplicationClient.Users[id].Photo.Content.Request().GetAsync())
                 {
                     if (photoStream != null)
                     {
@@ -102,7 +105,14 @@ namespace Membership.Services
                 throw new ArgumentException("Argument cannot be blank when configured is true", nameof(displayName));
             }
 
-
+            // If we have a photo, check if it's a jpeg
+            if(profilePhoto != null)
+            {
+                if(profilePhoto.Length <= 4 || !HasJpegHeader(profilePhoto))
+                {
+                    throw new ArgumentException("Profile photo is not a jpeg.", nameof(displayName));
+                }
+            }
 
             var extensionInstance = new Dictionary<string, object>
             {
@@ -124,25 +134,14 @@ namespace Membership.Services
                 AdditionalData = extensionInstance                
             };
 
-            var user = await _graphClient.Users[id].Request().UpdateAsync(toUpdate);
+            var user = await _graphApplicationClient.Users[id].Request().UpdateAsync(toUpdate);
 
             if(profilePhoto != null && profilePhoto.Length > 0)
             {
                 using (var ms = new MemoryStream(profilePhoto))
                 {
-                    await _graphClient.Users[id].Photo.Content.Request().PutAsync(ms);
-                    
-                    //var msg = new HttpRequestMessage
-                    //{
-                    //    Method = HttpMethod.Put,
-                    //    RequestUri = new Uri($"https://graph.microsoft.com/v1.0/beta/{id}/photo/$value"),
-                    //    Content = new StreamContent(ms)
-                    //};
-                    //msg.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
-
-                    //await _graphClient.AuthenticationProvider.AuthenticateRequestAsync(msg);
-
-                    //var resp = await _graphClient.HttpProvider.SendAsync(msg);
+                    // Updating a profile photo must be in a delegated context for now
+                    await _graphDelegatedClient.Users[id].Photo.Content.Request().PutAsync(ms);
                 }
             }
         }
@@ -184,6 +183,15 @@ namespace Membership.Services
             }
 
             return member;
+        }
+
+        private static bool HasJpegHeader(byte[] file)
+        {
+            var soi = BitConverter.ToUInt16(file);  // Start of Image (SOI) marker (FFD8)
+            var marker = BitConverter.ToUInt16(file, 2); // JFIF marker (FFE0) or EXIF marker(FF01)
+
+            return soi == 0xd8ff && (marker & 0xe0ff) == 0xe0ff;
+            
         }
     }
 }

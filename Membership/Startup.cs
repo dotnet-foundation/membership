@@ -70,7 +70,7 @@ namespace Membership
                 options.Authority = options.Authority + "/v2.0/";         // Azure AD v2.0
                 options.ResponseType = OpenIdConnectResponseType.IdToken;
                 options.SaveTokens = true;
-                options.UseTokenLifetime = true;
+                options.UseTokenLifetime = true;                
 
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
@@ -95,7 +95,6 @@ namespace Membership
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
             });
-
 
             services.AddMvc(options =>
             {
@@ -135,7 +134,7 @@ namespace Membership
                 {
 
                     var ctx = await sp.GetRequiredService<IHttpContextAccessor>().HttpContext.GetTokenAsync("id_token");
-                    var accessToken = await app.AcquireTokenOnBehalfOfAsync(new[] { "https://graph.microsoft.com/Directory.AccessAsUser.All" }, new UserAssertion(ctx));
+                    var accessToken = await app.AcquireTokenOnBehalfOfAsync(new[] { "https://graph.microsoft.com/Directory.AccessAsUser.All", "https://graph.microsoft.com/User.ReadWrite" }, new UserAssertion(ctx));
 
                     requestMessage
                         .Headers
@@ -143,7 +142,7 @@ namespace Membership
                 })));
             });
 
-            services.AddSingleton<UsersService>();
+            services.AddScoped<UsersService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
