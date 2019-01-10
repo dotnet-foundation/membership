@@ -68,12 +68,15 @@ namespace Membership
             services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
             {
                 options.Authority = options.Authority + "/v2.0/";         // Azure AD v2.0
-                options.ResponseType = OpenIdConnectResponseType.IdToken;
+                options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
                 options.SaveTokens = true;
                 options.UseTokenLifetime = true;                
 
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
+                options.Scope.Add("offline_access");
+                options.Scope.Add("https://graph.microsoft.com/Directory.AccessAsUser.All");
+                options.Scope.Add("https://graph.microsoft.com/User.ReadWrite");
 
                 options.Events = new OpenIdConnectEvents
                 {
@@ -85,7 +88,7 @@ namespace Membership
                             context.Response.Redirect($"{context.Request.Scheme}://{context.Request.Host}/Home/AccessDenied");                            
                         }
                         return Task.CompletedTask;
-                    }
+                    }                    
                 };
 
             });
@@ -95,7 +98,7 @@ namespace Membership
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
             });
-
+            
             services.AddMvc(options =>
             {
                 var policy = new AuthorizationPolicyBuilder()
@@ -127,18 +130,13 @@ namespace Membership
 
             services.AddScoped<IGraphDelegatedClient>(sp =>
             {
-                var oidc = sp.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(AzureADDefaults.OpenIdScheme);
-                var app = new ConfidentialClientApplication(oidc.ClientId, oidc.Authority, "https://not/used", new ClientCredential(oidc.ClientSecret), new TokenCache(), new TokenCache());
-
                 return new GraphClient(new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
                 {
-
-                    var ctx = await sp.GetRequiredService<IHttpContextAccessor>().HttpContext.GetTokenAsync("id_token");
-                    var accessToken = await app.AcquireTokenOnBehalfOfAsync(new[] { "https://graph.microsoft.com/Directory.AccessAsUser.All", "https://graph.microsoft.com/User.ReadWrite" }, new UserAssertion(ctx));
+                    var accessToken = await sp.GetRequiredService<IHttpContextAccessor>().HttpContext.GetTokenAsync("access_token");
 
                     requestMessage
                         .Headers
-                        .Authorization = new AuthenticationHeaderValue("Bearer", accessToken.AccessToken);
+                        .Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
                 })));
             });
 
