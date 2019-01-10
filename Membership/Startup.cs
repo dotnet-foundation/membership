@@ -65,18 +65,26 @@ namespace Membership
             services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
                 .AddAzureAD(options => Configuration.Bind("AzureAd", options));
 
+            services
+              .AddTokenAcquisition()
+              .AddDistributedMemoryCache()
+              .AddSession()
+              .AddSessionBasedTokenCache();
+
             services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
             {
                 options.Authority = options.Authority + "/v2.0/";         // Azure AD v2.0
+                
+
                 options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
                 options.SaveTokens = true;
                 options.UseTokenLifetime = true;                
 
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
-                options.Scope.Add("offline_access");
-                options.Scope.Add("https://graph.microsoft.com/Directory.AccessAsUser.All");
-                options.Scope.Add("https://graph.microsoft.com/User.ReadWrite");
+                //options.Scope.Add("offline_access");
+                //options.Scope.Add("https://graph.microsoft.com/Directory.AccessAsUser.All");
+                //options.Scope.Add("https://graph.microsoft.com/User.ReadWrite");
 
                 options.Events = new OpenIdConnectEvents
                 {
@@ -88,7 +96,17 @@ namespace Membership
                             context.Response.Redirect($"{context.Request.Scheme}://{context.Request.Host}/Home/AccessDenied");                            
                         }
                         return Task.CompletedTask;
-                    }                    
+                    },
+
+                    OnAuthorizationCodeReceived = async context =>
+                    {
+                        var tokenAcquisition = context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
+                        var scopes = new [] { "https://graph.microsoft.com/Directory.AccessAsUser.All", "https://graph.microsoft.com/User.ReadWrite" };
+                        context.Success();
+
+                        // Adds the token to the cache, and also handles the incremental consent and claim challenges
+                        await tokenAcquisition.AddAccountToCacheFromAuthorizationCode(context, scopes);
+                    }
                 };
 
             });
@@ -132,7 +150,10 @@ namespace Membership
             {
                 return new GraphClient(new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
                 {
-                    var accessToken = await sp.GetRequiredService<IHttpContextAccessor>().HttpContext.GetTokenAsync("access_token");
+                    //var accessToken = await sp.GetRequiredService<IHttpContextAccessor>().HttpContext.GetTokenAsync("access_token");
+                    var http = sp.GetRequiredService<IHttpContextAccessor>().HttpContext;
+                    var tokens = sp.GetRequiredService<ITokenAcquisition>();
+                    var accessToken = await tokens.GetAccessTokenOnBehalfOfUser(http, new[] { "https://graph.microsoft.com/Directory.AccessAsUser.All", "https://graph.microsoft.com/User.ReadWrite" });
 
                     requestMessage
                         .Headers
@@ -151,6 +172,10 @@ namespace Membership
         {
             if (env.IsDevelopment())
             {
+                // Since IdentityModel version 5.2.1 (or since Microsoft.AspNetCore.Authentication.JwtBearer version 2.2.0),
+                // PII hiding in log files is enabled by default for GDPR concerns.
+                // For debugging/development purposes, one can enable additional detail in exceptions by setting IdentityModelEventSource.ShowPII to true.
+                // Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
                 app.UseDeveloperExceptionPage();
             }
             else
@@ -167,7 +192,7 @@ namespace Membership
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
-
+            app.UseSession();
             app.UseAuthentication();
 
             app.UseMvc(routes =>
