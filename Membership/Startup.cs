@@ -75,6 +75,19 @@ namespace Membership
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
 
+                options.Events = new OpenIdConnectEvents
+                {
+                    OnRemoteFailure = context =>
+                    {
+                        if(context.Request.Form["error_description"].FirstOrDefault()?.Contains("AADSTS50105") == true)
+                        {
+                            context.HandleResponse();
+                            context.Response.Redirect($"{context.Request.Scheme}://{context.Request.Host}/Home/AccessDenied");                            
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
+
             });
 
             services.Configure<JwtBearerOptions>(AzureADDefaults.JwtBearerAuthenticationScheme, options =>
