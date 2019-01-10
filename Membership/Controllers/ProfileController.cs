@@ -56,7 +56,7 @@ namespace Membership.Controllers
         public async Task<IActionResult> Edit(string id, UpdateMemberModel model)
         {
 
-            if (model.PhotoUpload.Length > 100 * 1024)
+            if (model.PhotoUpload?.Length > 100 * 1024)
             {
                 ModelState.AddModelError(nameof(model.PhotoUpload), "Image size must be less than 100kb");
             }
@@ -73,7 +73,7 @@ namespace Membership.Controllers
 
                 byte[] buffer = null;
 
-                if(model.PhotoUpload.Length > 0)
+                if(model.PhotoUpload?.Length > 0)
                 {
                     using (var ms = new MemoryStream((int)model.PhotoUpload.Length))
                     {
