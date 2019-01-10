@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Membership.Models;
 using Microsoft.AspNetCore.Http;
@@ -94,7 +95,7 @@ namespace Membership.Services
             return FromUser(user);
         }
 
-        public async Task UpdateMemberAsync(string id, string displayName, bool? isActive, DateTimeOffset? expiration, string givenName, string surname, string githubId, string twitterId, string blogUrl)
+        public async Task UpdateMemberAsync(string id, string displayName, bool? isActive, DateTimeOffset? expiration, string givenName, string surname, string githubId, string twitterId, string blogUrl, byte[] profilePhoto)
         {
             if (string.IsNullOrWhiteSpace(displayName))
             {
@@ -120,12 +121,30 @@ namespace Membership.Services
                 DisplayName = displayName,
                 GivenName = givenName,
                 Surname = surname,
-                AdditionalData = extensionInstance
+                AdditionalData = extensionInstance                
             };
 
             var user = await _graphClient.Users[id].Request().UpdateAsync(toUpdate);
 
+            if(profilePhoto != null && profilePhoto.Length > 0)
+            {
+                using (var ms = new MemoryStream(profilePhoto))
+                {
+                    await _graphClient.Users[id].Photo.Content.Request().PutAsync(ms);
+                    
+                    //var msg = new HttpRequestMessage
+                    //{
+                    //    Method = HttpMethod.Put,
+                    //    RequestUri = new Uri($"https://graph.microsoft.com/v1.0/beta/{id}/photo/$value"),
+                    //    Content = new StreamContent(ms)
+                    //};
+                    //msg.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
 
+                    //await _graphClient.AuthenticationProvider.AuthenticateRequestAsync(msg);
+
+                    //var resp = await _graphClient.HttpProvider.SendAsync(msg);
+                }
+            }
         }
 
         private static MemberModel FromUser(User user)

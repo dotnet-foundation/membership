@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Membership.Models
@@ -28,5 +29,8 @@ namespace Membership.Models
         public string PhotoType { get; set; }
 
         public byte[] PhotoBytes { get; set; }
+
+        [Display(Name = "Profile Photo (max 100kb)")]        
+        public IFormFile PhotoUpload { get; set; }
     }
 }
