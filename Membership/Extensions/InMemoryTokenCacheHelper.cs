@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
 using System;
@@ -14,17 +15,17 @@ namespace Microsoft.AspNetCore.Authentication
     /// <summary>
     /// Extension class enabling adding the CookieBasedTokenCache implentation service
     /// </summary>
-    public static class SessionBasedTokenCacheExtension
+    public static class InMemoryTokenCacheExtension
     {
         /// <summary>
         /// Add the token acquisition service.
         /// </summary>
         /// <param name="services">Service collection</param>
         /// <returns>the service collection</returns>
-        public static IServiceCollection AddSessionBasedTokenCache(this IServiceCollection services)
+        public static IServiceCollection AddInMemoryTokenCache(this IServiceCollection services)
         {
             // Token acquisition service
-            services.AddSingleton<ITokenCacheProvider, SessionBasedTokenCacheProvider>();
+            services.AddSingleton<ITokenCacheProvider, InMemoryTokenCacheProvider>();
             return services;
         }
     }
@@ -32,9 +33,20 @@ namespace Microsoft.AspNetCore.Authentication
     /// <summary>
     /// Provides an implementation of <see cref="ITokenCacheProvider"/> for a cookie based token cache implementation
     /// </summary>
-    public class SessionBasedTokenCacheProvider : ITokenCacheProvider
+    class InMemoryTokenCacheProvider : ITokenCacheProvider
     {
-        SessionTokenCacheHelper helper;
+        InMemoryTokenCacheHelper helper;
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="cache"></param>
+        public InMemoryTokenCacheProvider(IMemoryCache cache)
+        {
+            memoryCache = cache;
+        }
+
+        IMemoryCache memoryCache;
 
         /// <summary>
         /// Get an MSAL.NET Token cache from the HttpContext, and possibly the AuthenticationProperties and Cookies sign-in scheme
@@ -47,26 +59,26 @@ namespace Microsoft.AspNetCore.Authentication
         public TokenCache GetCache(HttpContext httpContext, ClaimsPrincipal claimsPrincipal, AuthenticationProperties authenticationProperties, string signInScheme)
         {
             string userId = claimsPrincipal.GetMsalAccountId();
-            helper = new SessionTokenCacheHelper(userId, httpContext);
+            helper = new InMemoryTokenCacheHelper(userId, httpContext, memoryCache);
             return helper.GetMsalCacheInstance();
         }
     }
 
-    public class SessionTokenCacheHelper
+    public class InMemoryTokenCacheHelper
     {
-        private static ReaderWriterLockSlim SessionLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         string UserId = string.Empty;
         string CacheId = string.Empty;
-        ISession session;
+        IMemoryCache memoryCache;
+
 
         TokenCache cache = new TokenCache();
 
-        public SessionTokenCacheHelper(string userId, HttpContext httpcontext)
+        public InMemoryTokenCacheHelper(string userId, HttpContext httpcontext, IMemoryCache aspnetInMemoryCache)
         {
             // not object, we want the SUB
             UserId = userId;
             CacheId = UserId + "_TokenCache";
-            session = httpcontext.Session;
+            memoryCache = aspnetInMemoryCache;
             Load();
         }
 
@@ -80,48 +92,22 @@ namespace Microsoft.AspNetCore.Authentication
 
         public void Load()
         {
-            session.LoadAsync().Wait();
+            byte[] blob;
+            if (memoryCache.TryGetValue(CacheId, out blob))
+            {
+                cache.Deserialize(blob);
+            }
 
-            SessionLock.EnterReadLock();
-            try
-            {
-                byte[] blob;
-                if (session.TryGetValue(CacheId, out blob))
-                {
-                    Debug.WriteLine($"INFO: Deserializing session {session.Id}, cacheId {CacheId}");
-                    cache.Deserialize(blob);
-                }
-                else
-                {
-                    Debug.WriteLine($"INFO: cacheId {CacheId} not found in session {session.Id}");
-                }
-            }
-            finally
-            {
-                SessionLock.ExitReadLock();
-            }
         }
 
         public void Persist()
         {
-            SessionLock.EnterWriteLock();
+            // Optimistically set HasStateChanged to false. We need to do it early to avoid losing changes made by a concurrent thread.
+            cache.HasStateChanged = false;
 
-            try
-            {
-                // Optimistically set HasStateChanged to false. We need to do it early to avoid losing changes made by a concurrent thread.
-                cache.HasStateChanged = false;
-
-                Debug.WriteLine($"INFO: Serializing session {session.Id}, cacheId {CacheId}");
-
-                // Reflect changes in the persistent store
-                byte[] blob = cache.Serialize();
-                session.Set(CacheId, blob);
-                session.CommitAsync().Wait();
-            }
-            finally
-            {
-                SessionLock.ExitWriteLock();
-            }
+            // Reflect changes in the persistent store
+            byte[] blob = cache.Serialize();
+            memoryCache.Set(CacheId, blob);
         }
 
         // Triggered right before MSAL needs to access the cache.
