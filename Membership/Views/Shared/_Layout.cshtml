@@ -5,7 +5,23 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Membership</title>
-
+    <link rel="apple-touch-icon" sizes="57x57" href="~/img/favicon/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="~/img/favicon/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="~/img/favicon/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="~/img/favicon/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="~/img/favicon/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="~/img/favicon/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="~/img/favicon/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="~/img/favicon/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="~/img/favicon/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="~/img/favicon/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="~/img/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="~/img/favicon/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="~/img/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="~/img/favicon/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
     </environment>
@@ -14,9 +30,14 @@
               asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
               asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute"
               crossorigin="anonymous"
-              integrity="sha256-eSi1q2PG6J7g7ib17yAaWMcrr5GrtohYChqibrV7PBE="/>
+              integrity="sha256-eSi1q2PG6J7g7ib17yAaWMcrr5GrtohYChqibrV7PBE=" />
     </environment>
-    <link rel="stylesheet" href="~/css/site.css" />
+    <link href="https://fonts.googleapis.com/css?family=Bree+Serif" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+    <link rel="stylesheet" href="~/css/style.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/home.css" asp-append-version="true">
+
     @Html.Raw(JavaScriptSnippet.FullScript)
 </head>
 <body>
@@ -43,9 +64,6 @@
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Setup" asp-action="Index">Setup</a>
                             </li>
                         }
-                        <li class="nav-item">
-                            <a href="https://dotnetfoundation.org/Privacy-Policy">Privacy</a>
-                        </li>
                     </ul>
                 </div>
             </div>
@@ -58,9 +76,49 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; .NET Foundation 2019 - Membership -  <a href="https://dotnetfoundation.org/Privacy-Policy">Privacy</a><br /><span>Build: @Program.AssemblyInformationalVersion</span>
+    <footer id="site-footer" class="sticky-bottom h-card">
+        <data class="u-url" href="/"></data>
+        <div id="site-footer_container" class="container">
+            <div class="site-footer_row row">
+                <div class="col-12 d-flex justify-content-between">
+                    <img src="/img/Logo_footer.png">
+                    <ul id="site-footer_menu" class="align-self-end">
+                        <li><a href="https://dotnetfoundation.org//Privacy-Policy">Privacy Policy</a></li>
+                        <li><a href="https://dotnetfoundation.org//Code-Of-Conduct">Code of Conduct</a></li>
+                        <li><a href="https://github.com/dotnetfoundation-foundation/membership/issues">Site Problem?</a></li>
+                        <li>Build: @Program.AssemblyInformationalVersion</li>
+                    </ul>
+                </div>
+            </div>
+            <section class="site-social_container d-flex position-absolute">
+                <div class="site-social_icon site-social_icon--rss">
+                    <a href="/api/rss">
+                        <i class="fas fa-rss"></i>
+                    </a>
+                </div>
+                <div class="site-social_icon site-social_icon--twitter">
+                    <a href="https://twitter.com/dotnetfdn">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                </div>
+                <div class="site-social_icon site-social_icon--meetup">
+                    <a href="https://www.meetup.com/pro/dotnet/">
+                        <i class="fab fa-meetup"></i>
+                    </a>
+                </div>
+            </section>
+        </div>
+        <div id="site-footer_bookend" class="">
+            <div class="site-footer_container container">
+                <div class="site-footer_row row">
+                    <div class="col-12 d-flex justify-content-end">
+                        <p id="site-footer_copyright">
+                            &copy; @DateTime.Now.Year .NET Foundation and Contributors.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </footer>
 
