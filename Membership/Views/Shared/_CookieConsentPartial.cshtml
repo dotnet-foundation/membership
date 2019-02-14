@@ -8,12 +8,16 @@
 
 @if (showBanner)
 {
-    <div id="cookieConsent" class="alert alert-info alert-dismissible fade show" role="alert">
-        This website uses cookies to ensure you get the best experience on our website. <a href="https://dotnetfoundation.org/Privacy-Policy">Learn More</a>.
-        <button type="button" class="accept-policy close" data-dismiss="alert" aria-label="Close" data-cookie-string="@cookieString">
-            <span aria-hidden="true">Accept</span>
-        </button>
-    </div>
+
+    <section class="flash justify-content-center align-items-center">
+        <div class="alert alert-info alert-dismissible fade show w-100 text-center" role="alert">
+            This website uses cookies to ensure you get the best experience on our website. <a href="https://dotnetfoundation.org/Privacy-Policy">Learn More</a>.
+            <button type="button" class="accept-policy close" data-cookie-string="@cookieString" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    </section>
+
     <script>
         (function () {
             var button = document.querySelector("#cookieConsent button[data-cookie-string]");

@@ -2,7 +2,30 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+@section Styles{
+    <environment names="Development">
+        <link rel="stylesheet" href="~/css/home.css" asp-append-version="true">
+    </environment>
+    <environment names="Staging,Production">
+        <link rel="stylesheet" href="~/css/home.css" asp-append-version="true">
+        <meta name="google-site-verification" content="F9a3IwT00fpPIErVTvIIqBcf2NEScrDCczZi4g9sul4" />
+    </environment>
+}
+
+<section id="home-hero">
+    <div id="home-hero_container" class="container-fluid d-flex justify-content-center position-relative">
+        <div id="home-hero_overlay" class="position-absolute"></div>
+        <div id="home-hero_content" class="position-relative">
+            <h2 id="home-hero_title">Independent. Innovative. And always open source.</h2>
+            <p id="home-hero_copy" class="mx-auto">
+                Welcome to the .NET Foundation membership portal!
+            </p>
+            <div id="home-hero_buttons" class="mx-auto d-flex justify-content-between">
+                <a href="https://meetup.com/pro/dotnet" class="home-hero_button site-button site-button--pink">Find a Meetup</a>
+                <a href="/Projects" class="home-hero_button site-button site-button--pink">Dive into projects</a>
+                <a href="/Blog" class="home-hero_button site-button site-button--pink">Get the news</a>
+                <a href="/become-a-member" class="home-hero_button site-button site-button--pink">Apply for Membership</a>
+            </div>
+        </div>
+    </div>
+</section>

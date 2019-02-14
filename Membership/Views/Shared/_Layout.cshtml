@@ -36,24 +36,32 @@
     <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
     <link rel="stylesheet" href="~/css/style.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/home.css" asp-append-version="true">
+    @RenderSection("Styles", required: false)
 
     @Html.Raw(JavaScriptSnippet.FullScript)
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Membership</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+<body class="d-flex flex-column">
+    <header class="page-header_wrapper" role="banner">
+        <partial name="_CookieConsentPartial" />
+        <div class="site-nav_container container">
+            <nav class="navbar navbar-expand-md align-items-end">
+                <a class="navbar-brand" href="/"><img id="site-logo" src="/img/dotNetFoundationHorizontal.png"></a>
+                <button class="main-menu_toggle navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-                    <partial name="_LoginPartial" />
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul id="main-menu" class="navbar-nav ml-auto">
+                        <li class="main-menu_item nav-item">
+                            <a class="nav-link" href="https://dotnetfoundation.org/Get-Involved">Get Involved <span class="sr-only">(current)</span></a>
+                        </li>
+                        <li class="main-menu_item nav-item">
+                            <a class="nav-link" href="https://dotnetfoundation.org/Projects">Projects</a>
+                        </li>
+                        <li class="main-menu_item nav-item">
+                            <a class="nav-link" href="https://dotnetfoundation.org/About">About</a>
+                        </li>
+                        <li class="main-menu_item nav-item">
+                            <a class="nav-link" href="https://dotnetfoundation.org/News">News</a>
                         </li>
                         @if (User.IsInRole("admin"))
                         {
@@ -66,14 +74,34 @@
                         }
                     </ul>
                 </div>
-            </div>
-        </nav>
+            </nav>
+            <section class="site-social_container d-flex position-absolute">
+                <div class="site-social_icon site-social_icon--rss">
+                    <a href="/Blog">
+                        <i class="fas fa-rss"></i>
+                    </a>
+                </div>
+                <div class="site-social_icon site-social_icon--twitter">
+                    <a href="https://twitter.com/dotnetfdn">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                </div>
+                <div class="site-social_icon site-social_icon--meetup">
+                    <a href="https://www.meetup.com/pro/dotnet/">
+                        <i class="fab fa-meetup"></i>
+                    </a>
+                </div>
+            </section>
+        </div>
     </header>
-    <div class="container">
-        <partial name="_CookieConsentPartial" />
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+
+    <div id="site_wrapper" class="container-fluid cs-container flex-fill">
+        <div class="row">
+
+            <main id="site_container" role="main" class="col order-3">
+                @RenderBody()
+            </main>
+        </div>
     </div>
 
     <footer id="site-footer" class="sticky-bottom h-card">
