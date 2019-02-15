@@ -52,7 +52,10 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <ul id="main-menu" class="navbar-nav ml-auto">
                         <li class="main-menu_item nav-item">
-                            <a class="nav-link" href="https://dotnetfoundation.org/Get-Involved">Get Involved <span class="sr-only">(current)</span></a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Membership</a>
+                        </li>
+                        <li class="main-menu_item nav-item">
+                            <a class="nav-link" href="https://dotnetfoundation.org/Get-Involved">Get Involved</a>
                         </li>
                         <li class="main-menu_item nav-item">
                             <a class="nav-link" href="https://dotnetfoundation.org/Projects">Projects</a>
@@ -65,11 +68,8 @@
                         </li>
                         @if (User.IsInRole("admin"))
                         {
-                            <li class="nav-item">
+                            <li class="main-menu_item nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Members" asp-action="Index">Members</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Setup" asp-action="Index">Setup</a>
                             </li>
                         }
                     </ul>
@@ -77,7 +77,7 @@
             </nav>
             <section class="site-social_container d-flex position-absolute">
                 <div class="site-social_icon site-social_icon--rss">
-                    <a href="/Blog">
+                    <a href="https://dotnetfoundation.org/Blog">
                         <i class="fas fa-rss"></i>
                     </a>
                 </div>
@@ -114,7 +114,6 @@
                         <li><a href="https://dotnetfoundation.org//Privacy-Policy">Privacy Policy</a></li>
                         <li><a href="https://dotnetfoundation.org//Code-Of-Conduct">Code of Conduct</a></li>
                         <li><a href="https://github.com/dotnetfoundation-foundation/membership/issues">Site Problem?</a></li>
-                        <li>Build: @Program.AssemblyInformationalVersion</li>
                     </ul>
                 </div>
             </div>
@@ -171,5 +170,8 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     @RenderSection("Scripts", required: false)
+
+
 </body>
 </html>
+<!-- @Program.AssemblyInformationalVersion -->
