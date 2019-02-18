@@ -90,7 +90,7 @@ namespace Membership.Services
                 }
 
             }
-            catch(ServiceException)
+            catch (ServiceException)
             {
                 // not present
             }
@@ -106,9 +106,9 @@ namespace Membership.Services
             }
 
             // If we have a photo, check if it's a jpeg
-            if(profilePhoto != null)
+            if (profilePhoto != null)
             {
-                if(profilePhoto.Length <= 4 || !HasJpegHeader(profilePhoto))
+                if (profilePhoto.Length <= 4 || !HasJpegHeader(profilePhoto))
                 {
                     throw new ArgumentException("Profile photo is not a jpeg.", nameof(displayName));
                 }
@@ -125,18 +125,18 @@ namespace Membership.Services
                     ExpirationDateTime = expiration
                 } }
             };
-                       
+
             var toUpdate = new User
             {
                 DisplayName = displayName,
                 GivenName = givenName,
                 Surname = surname,
-                AdditionalData = extensionInstance                
+                AdditionalData = extensionInstance
             };
 
             var user = await _graphApplicationClient.Users[id].Request().UpdateAsync(toUpdate);
 
-            if(profilePhoto != null && profilePhoto.Length > 0)
+            if (profilePhoto != null && profilePhoto.Length > 0)
             {
                 using (var ms = new MemoryStream(profilePhoto))
                 {
@@ -146,20 +146,28 @@ namespace Membership.Services
             }
         }
 
-        public async Task UpdateMemberActiveAsync(string id, bool? isActive)
+        public async Task UpdateMemberActiveAsync(string id, bool isActive)
         {
             var extensionInstance = new Dictionary<string, object>
             {
                 { "dotnetfoundation_member", new MemberSchemaExtension
-                {
-                    IsActive = isActive
-                } }
+                    {
+                        IsActive = isActive,
+                        ExpirationDateTime = isActive ? DateTimeOffset.UtcNow.AddYears(1) : DateTimeOffset.UtcNow
+                    }
+                }
             };
 
             var toUpdate = new User
             {
                 AdditionalData = extensionInstance
             };
+
+            //TODO: This is causing updates to fail
+            //if (isActive)
+            //{
+            //    toUpdate.HireDate = DateTimeOffset.UtcNow;
+            //}
 
             var user = await _graphApplicationClient.Users[id].Request().UpdateAsync(toUpdate);
         }
@@ -168,7 +176,7 @@ namespace Membership.Services
         {
             // check email in two places: 1 Mail, 2 Other Mailss
             var email = user.Mail ?? user.OtherMails?.FirstOrDefault();
-            
+
             var member = new MemberModel()
             {
                 Id = user.Id,
@@ -178,21 +186,21 @@ namespace Membership.Services
                 Surname = user.Surname
             };
 
-            if(user.AdditionalData?.ContainsKey("dotnetfoundation_member") == true)
+            if (user.AdditionalData?.ContainsKey("dotnetfoundation_member") == true)
             {
                 var token = user.AdditionalData["dotnetfoundation_member"] as JToken;
                 var ext = token.ToObject<MemberSchemaExtension>();
                 member.TwitterId = ext.TwitterId;
                 member.GitHubId = ext.GitHubId;
                 member.BlogUrl = ext.BlogUrl;
-                if(ext.IsActive.HasValue)
+                if (ext.IsActive.HasValue)
                     member.IsActive = ext.IsActive.Value;
 
-                if(ext.ExpirationDateTime.HasValue)
+                if (ext.ExpirationDateTime.HasValue)
                     member.Expiration = ext.ExpirationDateTime.Value;
             }
 
-            if(user.Photo != null && user.Photo.AdditionalData.ContainsKey("data"))
+            if (user.Photo != null && user.Photo.AdditionalData.ContainsKey("data"))
             {
                 member.PhotoHeight = user.Photo.Height.GetValueOrDefault();
                 member.PhotoWidth = user.Photo.Width.GetValueOrDefault();
@@ -209,7 +217,7 @@ namespace Membership.Services
             var marker = BitConverter.ToUInt16(file, 2); // JFIF marker (FFE0) or EXIF marker(FF01)
 
             return soi == 0xd8ff && (marker & 0xe0ff) == 0xe0ff;
-            
+
         }
     }
 }
