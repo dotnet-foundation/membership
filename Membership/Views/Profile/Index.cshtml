@@ -3,7 +3,25 @@
     ViewData["Title"] = Model.DisplayName;
 }
 
-<h1>Edit Profile for @Model.DisplayName</h1>
+<h1>Member Profile for @Model.DisplayName</h1>
+
+@if (Model.IsActive == false)
+{
+    <div class="jumbotron">
+        <h1 class="display-4">Welcome!</h1>
+        <p>We don't have a record of dues payment for your account. You can pay your annual dues via OpenCollective or PayPay, or you can opt-out if dues present a financial hardship.</p>
+        <hr class="my-4">
+        <a class="btn btn-primary btn-lg" asp-action="PayDues" role="button">Pay Dues</a>
+    </div>
+}
+else
+{
+    <h2>Your annual dues information is up to date.</h2>
+    <p>
+        See our <a asp-action="PayDues">Dues Information</a> page for more information, or
+        to make an additional donation.
+    </p>
+}
 
 @if (Model.PhotoBytes != null)
 {
@@ -41,11 +59,6 @@
             <div class="form-group">
                 <label asp-for="IsActive" class="control-label"></label>
                 <label>@Html.ValueFor(model => model.IsActive)</label>
-            </div>
-            <div class="form-group">
-                <label asp-for="Expiration" class="control-label"></label>
-                <input asp-for="Expiration" class="form-control" readonly />
-                <span asp-validation-for="Expiration" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="GitHubId" class="control-label"></label>

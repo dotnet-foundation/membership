@@ -51,6 +51,34 @@ namespace Membership.Controllers
             return View(model);
         }
 
+        public async Task<IActionResult> DonationComplete()
+        {
+            var member = await _usersService.GetMe();
+
+            await _usersService.UpdateMemberActiveAsync(member.Id, true);
+
+            return View();
+        }
+
+        public async Task<IActionResult> OptOut()
+        {
+            var member = await _usersService.GetMe();
+
+            await _usersService.UpdateMemberActiveAsync(member.Id, true);
+
+            return View();
+        }
+
+        public IActionResult DonationCancel()
+        {
+            return View();
+        }
+
+        public IActionResult PayDues()
+        {
+            return View();
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(string id, UpdateMemberModel model)

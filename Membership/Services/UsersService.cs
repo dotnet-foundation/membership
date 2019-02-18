@@ -146,6 +146,24 @@ namespace Membership.Services
             }
         }
 
+        public async Task UpdateMemberActiveAsync(string id, bool? isActive)
+        {
+            var extensionInstance = new Dictionary<string, object>
+            {
+                { "dotnetfoundation_member", new MemberSchemaExtension
+                {
+                    IsActive = isActive
+                } }
+            };
+
+            var toUpdate = new User
+            {
+                AdditionalData = extensionInstance
+            };
+
+            var user = await _graphApplicationClient.Users[id].Request().UpdateAsync(toUpdate);
+        }
+
         private static MemberModel FromUser(User user)
         {
             // check email in two places: 1 Mail, 2 Other Mailss
