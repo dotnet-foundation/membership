@@ -23,6 +23,10 @@ else
     </p>
 }
 
+<p>
+    You are signed in as @Model.DisplayName  | <a asp-area="AzureAD" asp-controller="Account" asp-action="SignOut">Sign out</a>
+</p>
+
 @if (Model.PhotoBytes != null)
 {
 
