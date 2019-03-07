@@ -7,6 +7,7 @@ using CsvHelper;
 using Membership.Models;
 using Membership.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Graph;
@@ -18,11 +19,13 @@ namespace Membership.Controllers
     {
         private readonly IGraphDelegatedClient _graphDelegatedClient;
         private readonly IGraphServiceClient _graphApplicationClient;
+        private readonly IHostingEnvironment _hostingEnvironment;
 
-        public SetupController(IGraphDelegatedClient graphDelegatedClient, IGraphApplicationClient graphApplicationClient)
+        public SetupController(IGraphDelegatedClient graphDelegatedClient, IGraphApplicationClient graphApplicationClient, IHostingEnvironment hostingEnvironment)
         {
             _graphDelegatedClient = graphDelegatedClient;
             _graphApplicationClient = graphApplicationClient;
+            _hostingEnvironment = hostingEnvironment;
         }
         public IActionResult Index()
         {
@@ -31,25 +34,59 @@ namespace Membership.Controllers
 
         public async Task<IActionResult> AddMembers()
         {
+            const string emailSender = "jon@dotnetfoundation.org";
+            const string emailSubject = ".NET Foundation: Please Activate Your Membership";
+            const string redirectUrl = "https://members.dotnetfoundation.org/Profile";
+
+            string path = Path.Combine(_hostingEnvironment.ContentRootPath, "MemberInvitation");
+            string mailTemplate = await System.IO.File.ReadAllTextAsync(Path.Combine(path, "email-template.html"));
+            var attachments = new MessageAttachmentsCollectionPage();
+            attachments.Add(await GetImageAttachement(path, "header.png"));
+            attachments.Add(await GetImageAttachement(path, "footer.png"));
+
+            //TODO Add to Members group, not Test Members
+            //const string groupId = "940ac926-845c-489b-a270-eb961ca4ca8f"; //Members
+            const string groupId = "6eee9cd2-a055-433d-8ff1-07ca1d0f6fb7"; //Test Members
+            //We can look up the Members group by name, but in this case it's constant
+            //var group = await _graphApplicationClient
+            //        .Groups.Request().Filter("startswith(displayName,'Members')")
+            //        .GetAsync();
+            //string groupId = group[0].Id;
+
             //TODO Handle CSV upload rather than read from disk
-            using (var reader = new StreamReader("azure_ad_b2b.csv"))
+            using (var reader = new StreamReader("MemberInvitation\\azure_ad_b2b.csv"))
             using (var csv = new CsvReader(reader))
             {
                 var members = csv.GetRecords<ImportMember>();
+
+                //If we wanted to check if members are in the group first, could use this
+                //var existing = await _graphApplicationClient
+                //        .Groups[groupId]
+                //        .Members.Request().Select("id,mail").GetAsync();
+
                 foreach (var member in members)
                 {
                     Invitation invite = new Invitation();
                     invite.InvitedUserEmailAddress = member.EMail;
                     invite.SendInvitationMessage = false;
-                    invite.InviteRedirectUrl = "https://members.dotnetfoundation.org/Profile";
+                    invite.InviteRedirectUrl = redirectUrl;
                     invite.InvitedUserDisplayName = member.FirstName + " " + member.LastName;
 
                     var result = await _graphApplicationClient.Invitations.Request().AddAsync(invite);
 
-                    await _graphApplicationClient
-                        .Groups["6eee9cd2-a055-433d-8ff1-07ca1d0f6fb7"]
-                        .Members.References.Request()
-                        .AddAsync(result.InvitedUser);
+                    try
+                    {
+                        await _graphApplicationClient
+                            .Groups[groupId]
+                            .Members.References.Request()
+                            .AddAsync(result.InvitedUser);
+                    }
+                    catch (Exception ex)
+                    {
+                        //They're already added to the group, so we can break without sending e-mail
+                        Console.WriteLine(ex);
+                        continue;
+                    }
 
                     List<Recipient> recipients = new List<Recipient>();
                     recipients.Add(new Recipient
@@ -66,19 +103,37 @@ namespace Membership.Controllers
                         Body = new ItemBody
                         {
                             //TODO Replace with e-mail template
-                            Content = $"<h1>Welcome to the .NET Foundation</h1><p><a href='{result.InviteRedeemUrl}'>click here to join</a></p>",
-                            ContentType = BodyType.Text,
+                            Content = mailTemplate
+                                .Replace("{{action}}", result.InviteRedeemUrl)
+                                .Replace("{{name}}", member.FirstName),
+                            ContentType = BodyType.Html,
                         },
-                        Subject = "Subject",
+                        HasAttachments = true,
+                        Attachments = attachments,
+                        Subject = emailSubject,
                         ToRecipients = recipients
                     };
 
                     // Send the message.
-                    await _graphApplicationClient.Me.SendMail(email, true).Request().PostAsync();
+                    await _graphApplicationClient.Users[emailSender].SendMail(email, true).Request().PostAsync();
                 }
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<Attachment> GetImageAttachement(string path, string filename)
+        {
+            var bytes = await System.IO.File.ReadAllBytesAsync(Path.Combine(path, filename));
+
+            return new FileAttachment
+            {
+                ODataType = "#microsoft.graph.fileAttachment",
+                ContentBytes = bytes,
+                ContentType = "image/png",
+                ContentId = filename,
+                Name = filename
+            };
         }
 
         public async Task<IActionResult> RegisterSchemaExtensions()
