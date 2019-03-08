@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using CsvHelper;
 using Membership.Models;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting.Internal;
+using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 
 namespace Membership.Controllers
@@ -20,12 +22,14 @@ namespace Membership.Controllers
         private readonly IGraphDelegatedClient _graphDelegatedClient;
         private readonly IGraphServiceClient _graphApplicationClient;
         private readonly IHostingEnvironment _hostingEnvironment;
+        ILogger<SetupController> _logger;
 
-        public SetupController(IGraphDelegatedClient graphDelegatedClient, IGraphApplicationClient graphApplicationClient, IHostingEnvironment hostingEnvironment)
+        public SetupController(IGraphDelegatedClient graphDelegatedClient, IGraphApplicationClient graphApplicationClient, IHostingEnvironment hostingEnvironment, ILogger<SetupController> logger)
         {
             _graphDelegatedClient = graphDelegatedClient;
             _graphApplicationClient = graphApplicationClient;
             _hostingEnvironment = hostingEnvironment;
+            _logger = logger;
         }
         public IActionResult Index()
         {
@@ -44,9 +48,8 @@ namespace Membership.Controllers
             attachments.Add(await GetImageAttachement(path, "header.png"));
             attachments.Add(await GetImageAttachement(path, "footer.png"));
 
-            //TODO Add to Members group, not Test Members
-            //const string groupId = "940ac926-845c-489b-a270-eb961ca4ca8f"; //Members
-            const string groupId = "6eee9cd2-a055-433d-8ff1-07ca1d0f6fb7"; //Test Members
+            const string groupId = "940ac926-845c-489b-a270-eb961ca4ca8f"; //Members
+            //const string groupId = "6eee9cd2-a055-433d-8ff1-07ca1d0f6fb7"; //Test Members
             //We can look up the Members group by name, but in this case it's constant
             //var group = await _graphApplicationClient
             //        .Groups.Request().Filter("startswith(displayName,'Members')")
@@ -54,7 +57,7 @@ namespace Membership.Controllers
             //string groupId = group[0].Id;
 
             //TODO Handle CSV upload rather than read from disk
-            using (var reader = new StreamReader("MemberInvitation\\azure_ad_b2b.csv"))
+            using (var reader = new StreamReader("MemberInvitation\\azure_ad_b2b.csv", Encoding.GetEncoding(1252)))
             using (var csv = new CsvReader(reader))
             {
                 var members = csv.GetRecords<ImportMember>();
@@ -67,7 +70,7 @@ namespace Membership.Controllers
                 foreach (var member in members)
                 {
                     Invitation invite = new Invitation();
-                    invite.InvitedUserEmailAddress = member.EMail;
+                    invite.InvitedUserEmailAddress = member.EMail.Trim();
                     invite.SendInvitationMessage = false;
                     invite.InviteRedirectUrl = redirectUrl;
                     invite.InvitedUserDisplayName = member.FirstName + " " + member.LastName;
@@ -84,7 +87,7 @@ namespace Membership.Controllers
                     catch (Exception ex)
                     {
                         //They're already added to the group, so we can break without sending e-mail
-                        Console.WriteLine(ex);
+                        _logger.LogWarning("User exists: {FirstName} {LastName}: {EMail}", member.FirstName, member.LastName, member.EMail);
                         continue;
                     }
 
@@ -93,6 +96,7 @@ namespace Membership.Controllers
                     {
                         EmailAddress = new EmailAddress
                         {
+                            Name = member.FirstName + " " + member.LastName,
                             Address = member.EMail
                         }
                     });
@@ -116,6 +120,7 @@ namespace Membership.Controllers
 
                     // Send the message.
                     await _graphApplicationClient.Users[emailSender].SendMail(email, true).Request().PostAsync();
+                    _logger.LogInformation("Invite: {FirstName} {LastName}: {EMail}", member.FirstName, member.LastName, member.EMail);
                 }
             }
 
