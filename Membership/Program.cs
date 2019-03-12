@@ -25,7 +25,7 @@ namespace Membership
                .WriteTo.ColoredConsole(
                    LogEventLevel.Verbose,
                    "{NewLine}{Timestamp:HH:mm:ss} [{Level}] ({CorrelationToken}) {Message}{NewLine}{Exception}")
-               .WriteTo.File("log.txt", rollingInterval: RollingInterval.Day)
+               //.WriteTo.File("log.txt", rollingInterval: RollingInterval.Day)
                .CreateLogger();
 
             try

@@ -268,3 +268,4 @@ __pycache__/
 
 # VS Code
 .vscode/
+/Membership/MemberInvitation/azure_ad_b2b.csv
