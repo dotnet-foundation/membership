@@ -165,7 +165,11 @@ p {
     font-size: 2rem;
 }
 
-.page-section p, ul li {
+.page-section p {
+    font-size: 16px;
+}
+
+.page-section ul li {
     font-size: 16px;
     margin-bottom: 0;
 }
@@ -580,15 +584,15 @@ img {
     border-color: #e2068c;
 }
 
-body.pages .container-fluid {
+body .container-fluid {
     padding: 0;
 }
-body.pages .row {
+body .row {
     margin-right:0;
     margin-left:0;
 }
 
-body.pages main.col {
+body main.col {
     padding-right: 0;
     padding-left: 0;
 }
