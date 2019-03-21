@@ -13,8 +13,8 @@
                     <div class="box-body box-profile">
                         @if (Model.PhotoBytes != null)
                         {
-                            <div style="text-align: center;">
-                                <img style="width: 134px; height: 134px; border: 2px solid #68217a; border-radius: 50%; padding: 3px;" src="data:@Model.PhotoType;base64,@Convert.ToBase64String(Model.PhotoBytes)" />
+                            <div class="text-center">
+                                <img class="profile-image" src="data:@Model.PhotoType;base64,@Convert.ToBase64String(Model.PhotoBytes)" />
                             </div>
                         }
                         <h3 class="text-center">@Model.GivenName @Model.Surname</h3>
