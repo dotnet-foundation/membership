@@ -22,12 +22,12 @@
                         <p class="text-muted text-center">
                             @if (!string.IsNullOrEmpty(Model.GitHubId)) 
                             {
-                                <i class="fab fa-github"></i> <a href="https://github.com/@Model.GitHubId" target="_blank">@Model.GitHubId</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                                <i class="fab fa-github"></i> <a href="https://github.com/@Model.GitHubId" target="_blank">@Model.GitHubId</a>@:&nbsp;&nbsp;&nbsp;&nbsp;
                             }
                             
                             @if (!string.IsNullOrEmpty(Model.TwitterId)) 
                             {
-                                <i class="fab fa-twitter"></i> <a href="https://twitter.com/@Model.TwitterId" target="_blank">@Model.TwitterId</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                                <i class="fab fa-twitter"></i> <a href="https://twitter.com/@Model.TwitterId" target="_blank">@Model.TwitterId</a>@:&nbsp;&nbsp;&nbsp;&nbsp;
                             }
                             
                             @if (!string.IsNullOrEmpty(Model.BlogUrl)) 
