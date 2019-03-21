@@ -1,87 +1,116 @@
-﻿@model UpdateMemberModel
+@model UpdateMemberModel
 @{
     ViewData["Title"] = Model.DisplayName;
 }
 
-<h1>Member Profile for @Model.DisplayName</h1>
+<div class="container">
+    <h1>Member Profile for @Model.DisplayName <small><a asp-area="AzureAD" asp-controller="Account" asp-action="SignOut">Sign out</a></small></h1>
 
-@if (Model.IsActive == false)
-{
-    <div class="jumbotron">
-        <h1 class="display-4">Welcome!</h1>
-        <p>We don't have a record of dues payment for your account. You can pay your annual dues via OpenCollective or PayPal, or you can opt-out if dues present a financial hardship.</p>
-        <hr class="my-4">
-        <a class="btn btn-primary btn-lg" asp-action="PayDues" role="button">Pay Dues</a>
+    <div class="row">
+        <div class="col-md-6">
+            <div id="profile-view">
+                <div class="box box-primary">
+                    <div class="box-body box-profile">
+                        @if (Model.PhotoBytes != null)
+                        {
+                            <div style="text-align: center;">
+                                <img style="width: 134px; height: 134px; border: 2px solid #68217a; border-radius: 50%; padding: 3px;" src="data:@Model.PhotoType;base64,@Convert.ToBase64String(Model.PhotoBytes)" />
+                            </div>
+                        }
+                        <h3 class="text-center">@Model.GivenName @Model.Surname</h3>
+                            
+                        <p class="text-muted text-center">
+                            @if (!string.IsNullOrEmpty(Model.GitHubId)) 
+                            {
+                                <i class="fab fa-github"></i> <a href="https://github.com/@Model.GitHubId" target="_blank">@Model.GitHubId</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(Model.TwitterId)) 
+                            {
+                                <i class="fab fa-twitter"></i> <a href="https://twitter.com/@Model.TwitterId" target="_blank">@Model.TwitterId</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                            }
+                            
+                            @if (!string.IsNullOrEmpty(Model.BlogUrl)) 
+                            {
+                                <i class="fas fa-globe"></i> <a href="@Model.BlogUrl" target="_blank">@Model.BlogUrl</a>
+                            }
+                        </p>
+                        <a href="javascript:;" class="btn btn-primary btn-block" onclick="$('#profile-edit').show(); $('#profile-view').hide();">Edit Profile</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="profile-edit" style="display: none;">
+                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="form-group">
+                        <label asp-for="DisplayName" class="control-label"></label>
+                        <input asp-for="DisplayName" class="form-control" />
+                        <span asp-validation-for="DisplayName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="GivenName" class="control-label"></label>
+                        <input asp-for="GivenName" class="form-control" />
+                        <span asp-validation-for="GivenName" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Surname" class="control-label"></label>
+                        <input asp-for="Surname" class="form-control" />
+                        <span asp-validation-for="Surname" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="PhotoUpload" class="control-label"></label>
+                        <input asp-for="PhotoUpload" class="form-control" accept="image/jpeg" />
+                        <span class="text-info">Might take a few seconds to appear after save</span>
+                        <span asp-validation-for="PhotoUpload" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="GitHubId" class="control-label"></label>
+                        <input asp-for="GitHubId" class="form-control" />
+                        <span asp-validation-for="GitHubId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="TwitterId" class="control-label"></label>
+                        @@<input asp-for="TwitterId" class="form-control" />
+                        <span asp-validation-for="TwitterId" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="BlogUrl" class="control-label"></label>
+                        <input asp-for="BlogUrl" class="form-control" />
+                        <span asp-validation-for="BlogUrl" class="text-danger"></span>
+                    </div>
+                    <div class="form-group">
+                        <input type="submit" value="Save" class="btn btn-primary" />
+                        
+                        <input type="button" value="Cancel" class="btn btn-default" onclick="$('#profile-edit').hide(); $('#profile-view').show();" />
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-6">
+            @if (!Model.IsActive)
+            {
+                <div class="jumbotron">
+                    <h1 class="display-4">Welcome!</h1>
+                    <p>We don't have a record of dues payment for your account. You can pay your annual dues via OpenCollective or PayPal, or you can opt-out if dues present a financial hardship.</p>
+                    <hr class="my-4">
+                    <a class="btn btn-primary btn-lg" asp-action="PayDues" role="button">Pay Dues</a>
+                </div>
+            }
+            else
+            {
+                <h2>Your annual dues information is up to date.</h2>
+                <p>
+                    See our <a asp-action="PayDues">Dues Information</a> page for more information, or
+                    to make an additional donation.
+                </p>
+            }
+        </div>
     </div>
-}
-else
-{
-    <h2>Your annual dues information is up to date.</h2>
-    <p>
-        See our <a asp-action="PayDues">Dues Information</a> page for more information, or
-        to make an additional donation.
-    </p>
-}
-
-<p>
-    You are signed in as @Model.DisplayName  | <a asp-area="AzureAD" asp-controller="Account" asp-action="SignOut">Sign out</a>
-</p>
-
-@if (Model.PhotoBytes != null)
-{
-
-    <img style="max-height:250px;max-width:250px;" height="@Model.PhotoHeight" width="@Model.PhotoWidth" src="data:@Model.PhotoType;base64,@Convert.ToBase64String(Model.PhotoBytes)" />
-}
-
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit" method="post" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="DisplayName" class="control-label"></label>
-                <input asp-for="DisplayName" class="form-control" />
-                <span asp-validation-for="DisplayName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="GivenName" class="control-label"></label>
-                <input asp-for="GivenName" class="form-control" />
-                <span asp-validation-for="GivenName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Surname" class="control-label"></label>
-                <input asp-for="Surname" class="form-control" />
-                <span asp-validation-for="Surname" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="PhotoUpload" class="control-label"></label>
-                <input asp-for="PhotoUpload" class="form-control" accept="image/jpeg" />
-                <span class="text-info">Might take a few seconds to appear after save</span>
-                <span asp-validation-for="PhotoUpload" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label asp-for="GitHubId" class="control-label"></label>
-                <input asp-for="GitHubId" class="form-control" />
-                <span asp-validation-for="GitHubId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TwitterId" class="control-label"></label>
-                @@<input asp-for="TwitterId" class="form-control" />
-                <span asp-validation-for="TwitterId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="BlogUrl" class="control-label"></label>
-                <input asp-for="BlogUrl" class="form-control" />
-                <span asp-validation-for="BlogUrl" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
+    
 </div>
-
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
