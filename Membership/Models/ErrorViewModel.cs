@@ -1,6 +1,4 @@
-using System;
-
-namespace Membership.Models
+﻿namespace Membership.Models
 {
     public class ErrorViewModel
     {

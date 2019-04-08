@@ -1,18 +1,10 @@
 ﻿using System;
-using System.Buffers.Text;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Membership.Models;
 using Membership.Services;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Graph;
-using Newtonsoft.Json.Linq;
 
 namespace Membership.Controllers
 {
@@ -47,7 +39,6 @@ namespace Membership.Controllers
                 PhotoBytes = member.PhotoBytes
             };
             
-
             return View(model);
         }
 
@@ -83,7 +74,6 @@ namespace Membership.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(string id, UpdateMemberModel model)
         {
-
             if (model.PhotoUpload?.Length > 100 * 1024)
             {
                 ModelState.AddModelError(nameof(model.PhotoUpload), "Image size must be less than 100kb");
@@ -93,7 +83,6 @@ namespace Membership.Controllers
             {
                 return View(nameof(Index), model);
             }
-
 
             try
             {

@@ -1,15 +1,15 @@
-﻿using Microsoft.AspNetCore.Authentication.AzureAD.UI;
+﻿using System;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Client;
-using System;
-using System.Security.Claims;
 
 namespace Microsoft.AspNetCore.Authentication
 {
     /// <summary>
-    /// Extension class enabling adding the CookieBasedTokenCache implentation service
+    /// Extension class enabling adding the CookieBasedTokenCache implementation service
     /// </summary>
     public static class CookieBasedTokenCacheExtension
     {
@@ -55,10 +55,10 @@ namespace Microsoft.AspNetCore.Authentication
     public class AuthPropertiesTokenCacheHelper
     {
         private const string TokenCacheKey = ".UserTokenCache";
-        private HttpContext _httpContext;
+        private readonly HttpContext _httpContext;
         private ClaimsPrincipal _principal;
         private AuthenticationProperties _authProperties;
-        private string _signInScheme;
+        private readonly string _signInScheme;
 
         private AuthPropertiesTokenCacheHelper(AuthenticationProperties authProperties) : base()
         {
@@ -94,8 +94,7 @@ namespace Microsoft.AspNetCore.Authentication
 
         private void BeforeAccessNotificationWithProperties(TokenCacheNotificationArgs args)
         {
-            string cachedTokensText;
-            if (_authProperties.Items.TryGetValue(TokenCacheKey, out cachedTokensText))
+            if (_authProperties.Items.TryGetValue(TokenCacheKey, out string cachedTokensText))
                 TokenCache.Deserialize(Convert.FromBase64String(cachedTokensText));
         }
 

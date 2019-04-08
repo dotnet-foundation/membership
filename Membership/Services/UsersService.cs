@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Membership.Models;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
@@ -17,15 +16,13 @@ namespace Membership.Services
         private readonly IGraphServiceClient _graphApplicationClient;
         private readonly IGraphDelegatedClient _graphDelegatedClient;
         private readonly IHttpContextAccessor _context;
-        private readonly IOptionsMonitor<OpenIdConnectOptions> _oidcOptions;
         private readonly string _membersGroupId;
 
-        public UsersService(IGraphApplicationClient graphClient, IGraphDelegatedClient graphDelegatedClient, IHttpContextAccessor context, IOptions<AdminConfig> options, IOptionsMonitor<OpenIdConnectOptions> oidcOptions)
+        public UsersService(IGraphServiceClient graphClient, IGraphDelegatedClient graphDelegatedClient, IHttpContextAccessor context, IOptions<AdminConfig> options)
         {
             _graphApplicationClient = graphClient;
             _graphDelegatedClient = graphDelegatedClient;
             _context = context;
-            _oidcOptions = oidcOptions;
             _membersGroupId = options.Value.MembersGroupId;
         }
 

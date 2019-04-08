@@ -1,18 +1,14 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Identity.Client;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Security.Claims;
 using System.Threading;
-using System.Web;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Identity.Client;
 
 namespace Microsoft.AspNetCore.Authentication
 {
     /// <summary>
-    /// Extension class enabling adding the CookieBasedTokenCache implentation service
+    /// Extension class enabling adding the CookieBasedTokenCache implementation service
     /// </summary>
     public static class SessionBasedTokenCacheExtension
     {
@@ -34,7 +30,7 @@ namespace Microsoft.AspNetCore.Authentication
     /// </summary>
     public class SessionBasedTokenCacheProvider : ITokenCacheProvider
     {
-        SessionTokenCacheHelper helper;
+        SessionTokenCacheHelper _helper;
 
         /// <summary>
         /// Get an MSAL.NET Token cache from the HttpContext, and possibly the AuthenticationProperties and Cookies sign-in scheme
@@ -43,57 +39,53 @@ namespace Microsoft.AspNetCore.Authentication
         /// <param name="authenticationProperties">Authentication properties</param>
         /// <param name="signInScheme">Sign-in scheme</param>
         /// <returns>A token cache to use in the application</returns>
-
         public TokenCache GetCache(HttpContext httpContext, ClaimsPrincipal claimsPrincipal, AuthenticationProperties authenticationProperties, string signInScheme)
         {
             string userId = claimsPrincipal.GetMsalAccountId();
-            helper = new SessionTokenCacheHelper(userId, httpContext);
-            return helper.GetMsalCacheInstance();
+            _helper = new SessionTokenCacheHelper(userId, httpContext);
+            return _helper.GetMsalCacheInstance();
         }
     }
 
     public class SessionTokenCacheHelper
     {
-        private static ReaderWriterLockSlim SessionLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-        string UserId = string.Empty;
-        string CacheId = string.Empty;
-        ISession session;
+        private static readonly ReaderWriterLockSlim SessionLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
+        private readonly string _cacheId;
+        private readonly ISession _session;
 
-        TokenCache cache = new TokenCache();
+        private readonly TokenCache _cache = new TokenCache();
 
-        public SessionTokenCacheHelper(string userId, HttpContext httpcontext)
+        public SessionTokenCacheHelper(string userId, HttpContext httpContext)
         {
             // not object, we want the SUB
-            UserId = userId;
-            CacheId = UserId + "_TokenCache";
-            session = httpcontext.Session;
+            _cacheId = userId + "_TokenCache";
+            _session = httpContext.Session;
             Load();
         }
 
         public TokenCache GetMsalCacheInstance()
         {
-            cache.SetBeforeAccess(BeforeAccessNotification);
-            cache.SetAfterAccess(AfterAccessNotification);
+            _cache.SetBeforeAccess(BeforeAccessNotification);
+            _cache.SetAfterAccess(AfterAccessNotification);
             Load();
-            return cache;
+            return _cache;
         }
 
         public void Load()
         {
-            session.LoadAsync().Wait();
+            _session.LoadAsync().Wait();
 
             SessionLock.EnterReadLock();
             try
             {
-                byte[] blob;
-                if (session.TryGetValue(CacheId, out blob))
+                if (_session.TryGetValue(_cacheId, out byte[] blob))
                 {
-                    Debug.WriteLine($"INFO: Deserializing session {session.Id}, cacheId {CacheId}");
-                    cache.Deserialize(blob);
+                    Debug.WriteLine($"INFO: Deserializing session {_session.Id}, cacheId {_cacheId}");
+                    _cache.Deserialize(blob);
                 }
                 else
                 {
-                    Debug.WriteLine($"INFO: cacheId {CacheId} not found in session {session.Id}");
+                    Debug.WriteLine($"INFO: cacheId {_cacheId} not found in session {_session.Id}");
                 }
             }
             finally
@@ -109,14 +101,14 @@ namespace Microsoft.AspNetCore.Authentication
             try
             {
                 // Optimistically set HasStateChanged to false. We need to do it early to avoid losing changes made by a concurrent thread.
-                cache.HasStateChanged = false;
+                _cache.HasStateChanged = false;
 
-                Debug.WriteLine($"INFO: Serializing session {session.Id}, cacheId {CacheId}");
+                Debug.WriteLine($"INFO: Serializing session {_session.Id}, cacheId {_cacheId}");
 
                 // Reflect changes in the persistent store
-                byte[] blob = cache.Serialize();
-                session.Set(CacheId, blob);
-                session.CommitAsync().Wait();
+                byte[] blob = _cache.Serialize();
+                _session.Set(_cacheId, blob);
+                _session.CommitAsync().Wait();
             }
             finally
             {
@@ -135,7 +127,7 @@ namespace Microsoft.AspNetCore.Authentication
         void AfterAccessNotification(TokenCacheNotificationArgs args)
         {
             // if the access operation resulted in a cache update
-            if (cache.HasStateChanged)
+            if (_cache.HasStateChanged)
             {
                 Persist();
             }

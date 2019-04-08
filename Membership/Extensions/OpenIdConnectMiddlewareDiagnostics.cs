@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Microsoft.AspNetCore.Authentication
 {
@@ -16,46 +14,46 @@ namespace Microsoft.AspNetCore.Authentication
         //     be used to set ProtocolMessage.State that will be persisted through the authentication
         //     process. The ProtocolMessage can also be used to add or customize parameters
         //     sent to the identity provider.
-        static Func<RedirectContext, Task> onRedirectToIdentityProvider;
+        static Func<RedirectContext, Task> _onRedirectToIdentityProvider;
         //
         // Summary:
         //     Invoked when a protocol message is first received.
-        static Func<MessageReceivedContext, Task> onMessageReceived;
+        static Func<MessageReceivedContext, Task> _onMessageReceived;
         //
         // Summary:
         //     Invoked after security token validation if an authorization code is present in
         //     the protocol message.
-        static Func<AuthorizationCodeReceivedContext, Task> onAuthorizationCodeReceived;
+        static Func<AuthorizationCodeReceivedContext, Task> _onAuthorizationCodeReceived;
         //
         // Summary:
         //     Invoked after "authorization code" is redeemed for tokens at the token endpoint.
-        static Func<TokenResponseReceivedContext, Task> onTokenResponseReceived;
+        static Func<TokenResponseReceivedContext, Task> _onTokenResponseReceived;
         //
         // Summary:
         //     Invoked when an IdToken has been validated and produced an AuthenticationTicket.
-        static Func<TokenValidatedContext, Task> onTokenValidated;
+        static Func<TokenValidatedContext, Task> _onTokenValidated;
         //
         // Summary:
         //     Invoked when user information is retrieved from the UserInfoEndpoint.
-        static Func<UserInformationReceivedContext, Task> onUserInformationReceived;
+        static Func<UserInformationReceivedContext, Task> _onUserInformationReceived;
         //
         // Summary:
         //     Invoked if exceptions are thrown during request processing. The exceptions will
         //     be re-thrown after this event unless suppressed.
-        static Func<AuthenticationFailedContext, Task> onAuthenticationFailed;
+        static Func<AuthenticationFailedContext, Task> _onAuthenticationFailed;
         //
         // Summary:
         //     Invoked when a request is received on the RemoteSignOutPath.
-        static Func<RemoteSignOutContext, Task> onRemoteSignOut;
+        static Func<RemoteSignOutContext, Task> _onRemoteSignOut;
         //
         // Summary:
         //     Invoked before redirecting to the identity provider to sign out.
-        static Func<RedirectContext, Task> onRedirectToIdentityProviderForSignOut;
+        static Func<RedirectContext, Task> _onRedirectToIdentityProviderForSignOut;
         //
         // Summary:
         //     Invoked before redirecting to the Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectOptions.SignedOutRedirectUri
         //     at the end of a remote sign-out flow.
-        static Func<RemoteSignOutContext, Task> onSignedOutCallbackRedirect;
+        static Func<RemoteSignOutContext, Task> _onSignedOutCallbackRedirect;
  
 
         /// <summary>
@@ -65,34 +63,34 @@ namespace Microsoft.AspNetCore.Authentication
         /// <param name="events">Events to subscribe to</param>
         public static void Subscribe(OpenIdConnectEvents events)
         {
-            onRedirectToIdentityProvider = events.OnRedirectToIdentityProvider;
+            _onRedirectToIdentityProvider = events.OnRedirectToIdentityProvider;
             events.OnRedirectToIdentityProvider = OnRedirectToIdentityProvider;
 
-            onMessageReceived = events.OnMessageReceived;
+            _onMessageReceived = events.OnMessageReceived;
             events.OnMessageReceived = OnMessageReceived;
 
-            onAuthorizationCodeReceived = events.OnAuthorizationCodeReceived;
+            _onAuthorizationCodeReceived = events.OnAuthorizationCodeReceived;
             events.OnAuthorizationCodeReceived = OnAuthorizationCodeReceived;
 
-            onTokenResponseReceived = events.OnTokenResponseReceived;
+            _onTokenResponseReceived = events.OnTokenResponseReceived;
             events.OnTokenResponseReceived = OnTokenResponseReceived;
 
-            onTokenValidated = events.OnTokenValidated;
+            _onTokenValidated = events.OnTokenValidated;
             events.OnTokenValidated = OnTokenValidated;
 
-            onUserInformationReceived = events.OnUserInformationReceived;
+            _onUserInformationReceived = events.OnUserInformationReceived;
             events.OnUserInformationReceived = OnUserInformationReceived;
 
-            onAuthenticationFailed = events.OnAuthenticationFailed;
+            _onAuthenticationFailed = events.OnAuthenticationFailed;
             events.OnAuthenticationFailed = OnAuthenticationFailed;
 
-            onRemoteSignOut = events.OnRemoteSignOut;
+            _onRemoteSignOut = events.OnRemoteSignOut;
             events.OnRemoteSignOut = OnRemoteSignOut;
 
-            onRedirectToIdentityProviderForSignOut = events.OnRedirectToIdentityProviderForSignOut;
+            _onRedirectToIdentityProviderForSignOut = events.OnRedirectToIdentityProviderForSignOut;
             events.OnRedirectToIdentityProviderForSignOut = OnRedirectToIdentityProviderForSignOut;
 
-            onSignedOutCallbackRedirect = events.OnSignedOutCallbackRedirect;
+            _onSignedOutCallbackRedirect = events.OnSignedOutCallbackRedirect;
             events.OnSignedOutCallbackRedirect = OnSignedOutCallbackRedirect;
         }
 
@@ -100,7 +98,7 @@ namespace Microsoft.AspNetCore.Authentication
         {
             Debug.WriteLine($"1. Begin {nameof(OnRedirectToIdentityProvider)}");
 
-            await onRedirectToIdentityProvider(context);
+            await _onRedirectToIdentityProvider(context);
 
             Debug.WriteLine($"   Sending OpenIdConnect message:");
             DisplayProtocolMessage(context.ProtocolMessage);
@@ -124,60 +122,60 @@ namespace Microsoft.AspNetCore.Authentication
             Debug.WriteLine($"2. Begin {nameof(OnMessageReceived)}");
             Debug.WriteLine($"   Received from STS the OpenIdConnect message:");
             DisplayProtocolMessage(context.ProtocolMessage);
-            await onMessageReceived(context);
+            await _onMessageReceived(context);
             Debug.WriteLine($"2. End - {nameof(OnMessageReceived)}");
         }
 
         static async Task OnAuthorizationCodeReceived(AuthorizationCodeReceivedContext context)
         {
             Debug.WriteLine($"4. Begin {nameof(OnAuthorizationCodeReceived)}");
-            await onAuthorizationCodeReceived(context);
+            await _onAuthorizationCodeReceived(context);
             Debug.WriteLine($"4. End - {nameof(OnAuthorizationCodeReceived)}");
         }
 
         static async Task OnTokenResponseReceived(TokenResponseReceivedContext context)
         {
             Debug.WriteLine($"5. Begin {nameof(OnTokenResponseReceived)}");
-            await onTokenResponseReceived(context);
+            await _onTokenResponseReceived(context);
             Debug.WriteLine($"5. End - {nameof(OnTokenResponseReceived)}");
 
         }
         static async Task OnTokenValidated(TokenValidatedContext context)
         {
             Debug.WriteLine($"3. Begin {nameof(OnTokenValidated)}");
-            await onTokenValidated(context);
+            await _onTokenValidated(context);
             Debug.WriteLine($"3. End - {nameof(OnTokenValidated)}");
         }
         static async Task OnUserInformationReceived(UserInformationReceivedContext context)
         {
             Debug.WriteLine($"6. Begin {nameof(OnUserInformationReceived)}");
-            await onUserInformationReceived(context);
+            await _onUserInformationReceived(context);
             Debug.WriteLine($"6. End - {nameof(OnUserInformationReceived)}");
         }
 
         static async Task OnAuthenticationFailed(AuthenticationFailedContext context)
         {
             Debug.WriteLine($"99. Begin {nameof(OnAuthenticationFailed)}");
-            await onAuthenticationFailed(context);
+            await _onAuthenticationFailed(context);
             Debug.WriteLine($"99. End - {nameof(OnAuthenticationFailed)}");
         }
 
         static async Task OnRedirectToIdentityProviderForSignOut(RedirectContext context)
         {
             Debug.WriteLine($"10. Begin {nameof(OnRedirectToIdentityProviderForSignOut)}");
-            await onRedirectToIdentityProviderForSignOut(context);
+            await _onRedirectToIdentityProviderForSignOut(context);
             Debug.WriteLine($"10. End - {nameof(OnRedirectToIdentityProviderForSignOut)}");
         }
         static async Task OnRemoteSignOut(RemoteSignOutContext context)
         {
             Debug.WriteLine($"11. Begin {nameof(OnRemoteSignOut)}");
-            await onRemoteSignOut(context);
+            await _onRemoteSignOut(context);
             Debug.WriteLine($"11. End - {nameof(OnRemoteSignOut)}");
         }
         static async Task OnSignedOutCallbackRedirect(RemoteSignOutContext context)
         {
             Debug.WriteLine($"12. Begin {nameof(OnSignedOutCallbackRedirect)}");
-            await onSignedOutCallbackRedirect(context);
+            await _onSignedOutCallbackRedirect(context);
             Debug.WriteLine($"12. End {nameof(OnSignedOutCallbackRedirect)}");
         }
     }

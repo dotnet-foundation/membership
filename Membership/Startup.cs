@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http.Headers;
-using System.Reflection;
-using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Membership.Models;
@@ -80,11 +77,8 @@ namespace Membership
 
             services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
             {
-                options.Authority = options.Authority + "/v2.0/";         // Azure AD v2.0
-                
-
+                options.Authority = options.Authority + "/v2.0/"; // Azure AD v2.0
                 options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
-           
                 options.TokenValidationParameters.IssuerValidator = AadIssuerValidator.ValidateAadIssuer;
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
@@ -303,7 +297,6 @@ namespace Membership
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
         }
-
 
         class SnapshotCollectorTelemetryProcessorFactory : ITelemetryProcessorFactory
         {

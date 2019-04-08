@@ -1,18 +1,17 @@
-﻿using Microsoft.AspNetCore.Authentication.AzureAD.UI;
+﻿using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
-using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace Microsoft.AspNetCore.Authentication
 {
@@ -52,9 +51,9 @@ namespace Microsoft.AspNetCore.Authentication
     /// </summary>
     public class TokenAcquisition : ITokenAcquisition
     {
-        private AzureADOptions _azureAdOptions;
+        private readonly AzureADOptions _azureAdOptions;
 
-        private ITokenCacheProvider _tokenCacheProvider;
+        private readonly ITokenCacheProvider _tokenCacheProvider;
 
         /// <summary>
         /// Constructor of the TokenAcquisition service. This requires the Azure AD Options to 
@@ -72,7 +71,7 @@ namespace Microsoft.AspNetCore.Authentication
         /// <summary>
         /// Scopes which are already requested by MSAL.NET. they should not be re-requested;
         /// </summary>
-        private string[] scopesRequestedByMsalNet = new string[] { "openid", "profile", "offline_access" };
+        private readonly string[] _scopesRequestedByMsalNet = { "openid", "profile", "offline_access" };
 
         /// <summary>
         /// In a Web App, adds, to the MSAL.NET cache, the account of the user authenticating to the Web App, when the authorization code is received (after the user
@@ -85,14 +84,14 @@ namespace Microsoft.AspNetCore.Authentication
         /// From the configuration of the Authentication of the ASP.NET Core Web API: 
         /// <code>OpenIdConnectOptions options;</code>
         /// 
-        /// Subscribe to the authorization code recieved event:
+        /// Subscribe to the authorization code received event:
         /// <code>
         ///  options.Events = new OpenIdConnectEvents();
         ///  options.Events.OnAuthorizationCodeReceived = OnAuthorizationCodeReceived;
         /// }
         /// </code>
         /// 
-        /// And then in the OnAuthorizationCodeRecieved method, call <see cref="AddAccountToCacheFromAuthorizationCode"/>:
+        /// And then in the OnAuthorizationCodeReceived method, call <see cref="AddAccountToCacheFromAuthorizationCode"/>:
         /// <code>
         /// private async Task OnAuthorizationCodeReceived(AuthorizationCodeReceivedContext context)
         /// {
@@ -120,7 +119,7 @@ namespace Microsoft.AspNetCore.Authentication
                 // Do not share the access token with ASP.NET Core otherwise ASP.NET will cache it and will not send the OAuth 2.0 request in
                 // case a further call to AcquireTokenByAuthorizationCodeAsync in the future for incremental consent (getting a code requesting more scopes)
                 // Share the ID Token
-                var result = await application.AcquireTokenByAuthorizationCodeAsync(context.ProtocolMessage.Code, scopes.Except(scopesRequestedByMsalNet));
+                var result = await application.AcquireTokenByAuthorizationCodeAsync(context.ProtocolMessage.Code, scopes.Except(_scopesRequestedByMsalNet));
                 context.HandleCodeRedemption(null, result.IdToken);
             }
             catch (MsalException ex)
@@ -286,8 +285,6 @@ namespace Microsoft.AspNetCore.Authentication
             return app;
         }
 
-
-
         /// <summary>
         /// Gets an access token for a downstream API on behalf of the user described by its claimsPrincipal
         /// </summary>
@@ -327,7 +324,7 @@ namespace Microsoft.AspNetCore.Authentication
             try
             {
                 AuthenticationResult result = null;
-                result = await application.AcquireTokenSilentAsync(scopes.Except(scopesRequestedByMsalNet), account);
+                result = await application.AcquireTokenSilentAsync(scopes.Except(_scopesRequestedByMsalNet), account);
                 return result.AccessToken;
             }
             catch (MsalException ex)
@@ -365,7 +362,7 @@ namespace Microsoft.AspNetCore.Authentication
                 var application = CreateApplication(httpContext, principal, properties, null);
 
                 // .Result to make sure that the cache is filled-in before the controller tries to get access tokens
-                AuthenticationResult result = application.AcquireTokenOnBehalfOfAsync(scopes.Except(scopesRequestedByMsalNet), userAssertion).Result;
+                AuthenticationResult result = application.AcquireTokenOnBehalfOfAsync(scopes.Except(_scopesRequestedByMsalNet), userAssertion).Result;
             }
             catch (MsalException ex)
             {
@@ -373,7 +370,5 @@ namespace Microsoft.AspNetCore.Authentication
                 throw;
             }
         }
-
-
     }
 }

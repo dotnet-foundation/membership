@@ -1,9 +1,7 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Threading.Tasks;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.AspNetCore.Authentication
 {
@@ -61,10 +59,8 @@ namespace Microsoft.AspNetCore.Authentication
             {
                 throw new SecurityTokenInvalidIssuerException("Issuer does not match the valid issuers");
             }
-            else
-            {
-                return issuer;
-            }
+
+            return issuer;
         }
 
         private static string TenantedIssuer(string i, string tenantId)

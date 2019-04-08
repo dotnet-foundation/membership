@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Identity.Client;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
 namespace Microsoft.AspNetCore.Authentication
 {
@@ -21,14 +19,14 @@ namespace Microsoft.AspNetCore.Authentication
         /// From the configuration of the Authentication of the ASP.NET Core Web API: 
         /// <code>OpenIdConnectOptions options;</code>
         /// 
-        /// Subscribe to the authorization code recieved event:
+        /// Subscribe to the authorization code received event:
         /// <code>
         ///  options.Events = new OpenIdConnectEvents();
         ///  options.Events.OnAuthorizationCodeReceived = OnAuthorizationCodeReceived;
         /// }
         /// </code>
         /// 
-        /// And then in the OnAuthorizationCodeRecieved method, call <see cref="AddAccountToCacheFromAuthorizationCode"/>:
+        /// And then in the OnAuthorizationCodeReceived method, call <see cref="AddAccountToCacheFromAuthorizationCode"/>:
         /// <code>
         /// private async Task OnAuthorizationCodeReceived(AuthorizationCodeReceivedContext context)
         /// {
