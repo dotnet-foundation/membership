@@ -174,6 +174,8 @@ namespace Membership
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
             });
+
+            services.AddApplicationInsightsTelemetry();
             
             services.AddMvc(options =>
             {
@@ -188,6 +190,8 @@ namespace Membership
 
 
             services.Configure<AdminConfig>(options => options.MembersGroupId = Configuration["AzureAd:MembersGroupId"]);
+
+            services.AddSingleton<ITelemetryInitializer, VersionTelemetry>();
 
             services.AddSingleton<IGraphApplicationClient>(sp =>
             {
@@ -243,10 +247,6 @@ namespace Membership
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
-
-            loggerFactory.AddApplicationInsights(serviceProvider, Microsoft.Extensions.Logging.LogLevel.Information);
-
-            TelemetryConfiguration.Active.TelemetryInitializers.Add(new VersionTelemetry());
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
