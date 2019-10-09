@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using CsvHelper;
@@ -10,7 +9,6 @@ using Membership.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 
@@ -21,10 +19,10 @@ namespace Membership.Controllers
     {
         private readonly IGraphDelegatedClient _graphDelegatedClient;
         private readonly IGraphServiceClient _graphApplicationClient;
-        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IWebHostEnvironment _hostingEnvironment;
         ILogger<SetupController> _logger;
 
-        public SetupController(IGraphDelegatedClient graphDelegatedClient, IGraphApplicationClient graphApplicationClient, IHostingEnvironment hostingEnvironment, ILogger<SetupController> logger)
+        public SetupController(IGraphDelegatedClient graphDelegatedClient, IGraphApplicationClient graphApplicationClient, IWebHostEnvironment hostingEnvironment, ILogger<SetupController> logger)
         {
             _graphDelegatedClient = graphDelegatedClient;
             _graphApplicationClient = graphApplicationClient;
@@ -84,7 +82,7 @@ namespace Membership.Controllers
                             .Members.References.Request()
                             .AddAsync(result.InvitedUser);
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         //They're already added to the group, so we can break without sending e-mail
                         _logger.LogWarning("User exists: {FirstName} {LastName}: {EMail}", member.FirstName, member.LastName, member.EMail);

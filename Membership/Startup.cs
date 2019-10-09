@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http.Headers;
-using System.Reflection;
-using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Membership.Models;
@@ -28,6 +25,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
@@ -184,7 +182,7 @@ namespace Membership
                     .Build();
                 options.Filters.Add(new AuthorizeFilter(policy));
             })
-            .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
@@ -196,11 +194,16 @@ namespace Membership
             services.AddSingleton<IGraphApplicationClient>(sp =>
             {
                 var oidc = sp.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(AzureADDefaults.OpenIdScheme);
-                var app = new ConfidentialClientApplication(oidc.ClientId, oidc.Authority, "https://not/used", new ClientCredential(oidc.ClientSecret), null, new TokenCache());
-                
+                var app = ConfidentialClientApplicationBuilder.Create(oidc.ClientId)
+                    .WithRedirectUri("https://not/used")
+                    .WithClientSecret(oidc.ClientSecret)
+                    .WithAuthority(new Uri(oidc.Authority))
+                    .Build();
+
                 return new GraphClient(new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
                 {
-                    var accessToken = await app.AcquireTokenForClientAsync(new[] { "https://graph.microsoft.com/.default" });
+                    var accessToken = await app.AcquireTokenForClient(new[] { "https://graph.microsoft.com/.default" })
+                        .ExecuteAsync();
 
                     requestMessage
                         .Headers
@@ -231,14 +234,14 @@ namespace Membership
         public void Configure(IApplicationBuilder app,
                               ILoggerFactory loggerFactory,
                               IServiceProvider serviceProvider,
-                              IHostingEnvironment env)
+                              IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
                 // Since IdentityModel version 5.2.1 (or since Microsoft.AspNetCore.Authentication.JwtBearer version 2.2.0),
                 // PII hiding in log files is enabled by default for GDPR concerns.
                 // For debugging/development purposes, one can enable additional detail in exceptions by setting IdentityModelEventSource.ShowPII to true.
-                // Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
+                Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true;
                 app.UseDeveloperExceptionPage();
             }
             else
@@ -248,10 +251,12 @@ namespace Membership
                 app.UseHsts();
             }
 
+            app.UseAuthorization();
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
             app.UseSession();
+            app.UseRouting();
 
             // Allow local development without KeyVault access using "Local Development" launch profile
             if (this.Configuration["AzureAd:ClientId"] != null)
@@ -300,11 +305,11 @@ namespace Membership
                 app.UseAuthentication();
             }
 
-            app.UseMvc(routes =>
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(
+                endpoints.MapControllerRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
             });
         }
 
