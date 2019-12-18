@@ -35,6 +35,7 @@ using Microsoft.Graph;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.TokenCacheProviders.InMemory;
+using Microsoft.Identity.Web.TokenCacheProviders.Session;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Membership
@@ -74,13 +75,13 @@ namespace Membership
             // Token acquisition service based on MSAL.NET
             // and chosen token cache implementation
             services.AddMicrosoftIdentityPlatformAuthentication(Configuration)
-                    .AddMsal(Configuration, new []
+                    .AddMsal(Configuration, new[]
                         {
                             Constants.ScopeDirectoryAccessAsUserAll,
                             Constants.ScopeUserReadWrite
                         }
                             )
-                    .AddInMemoryTokenCaches();
+                    .AddSessionTokenCaches();
 
             services.AddSession();
             
