@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Graph;
+using Microsoft.Graph.Core.Requests;
 
 namespace Membership.Services
 {
@@ -94,12 +95,22 @@ namespace Membership.Services
 
         public ISecurityRequestBuilder Security => _graphServiceClient.Security;
 
-        public IGraphServiceGroupSettingsCollectionRequestBuilder GroupSettings => throw new NotImplementedException();
+        public IGraphServiceGroupSettingsCollectionRequestBuilder GroupSettings => _graphServiceClient.GroupSettings;
 
-        public IGraphServiceGroupSettingTemplatesCollectionRequestBuilder GroupSettingTemplates => throw new NotImplementedException();
+        public IGraphServiceGroupSettingTemplatesCollectionRequestBuilder GroupSettingTemplates => _graphServiceClient.GroupSettingTemplates;
 
-        public IGraphServiceDataPolicyOperationsCollectionRequestBuilder DataPolicyOperations => throw new NotImplementedException();
+        public IGraphServiceDataPolicyOperationsCollectionRequestBuilder DataPolicyOperations => _graphServiceClient.DataPolicyOperations;
 
-        public Func<IAuthenticationProvider> PerRequestAuthProvider { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public Func<IAuthenticationProvider> PerRequestAuthProvider { get => _graphServiceClient.PerRequestAuthProvider; set => _graphServiceClient.PerRequestAuthProvider = value; }
+
+        public IGraphServiceApplicationsCollectionRequestBuilder Applications => _graphServiceClient.Applications;
+
+        public IGraphServiceCertificateBasedAuthConfigurationCollectionRequestBuilder CertificateBasedAuthConfiguration => _graphServiceClient.CertificateBasedAuthConfiguration;
+
+        public IGraphServiceContactsCollectionRequestBuilder Contacts => _graphServiceClient.Contacts;
+
+        public ICloudCommunicationsRequestBuilder Communications => _graphServiceClient.Communications;
+
+        public IBatchRequestBuilder Batch => _graphServiceClient.Batch;
     }        
 }
