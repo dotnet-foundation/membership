@@ -98,5 +98,33 @@ namespace Membership.Controllers
                 return View(model); 
             }
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangeMemberEmail(string id, UpdateMemberModel model)
+        {
+            if(string.IsNullOrWhiteSpace(model.SignInAddress))
+            {
+                ModelState.AddModelError(nameof(model.SignInAddress), "Email address is required");
+            }
+
+            if(!ModelState.IsValid)
+            {
+                return View(nameof(Edit), model);
+            }
+
+            try
+            {
+
+                var newUserId = await _usersService.ChangeMemberLogonAddress(id, model.SignInAddress);
+
+                return RedirectToAction(nameof(Edit), new { id = newUserId });
+            }
+            catch(Exception e)
+            {
+                ModelState.TryAddModelError("", e.Message);
+                return View(nameof(Edit), model);
+            }
+        }
     }
 }

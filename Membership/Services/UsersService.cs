@@ -267,8 +267,13 @@ namespace Membership.Services
             return invitedUser;
         }
 
-        public async Task<bool> ChangeMemberLogonAddress(string id, string newAddress)
+        public async Task<string> ChangeMemberLogonAddress(string id, string newAddress)
         {
+            if (string.IsNullOrWhiteSpace(id))
+                throw new ArgumentException("message", nameof(id));
+            if (string.IsNullOrWhiteSpace(newAddress))
+                throw new ArgumentException("message", nameof(newAddress));
+
             // This method needs to
             // - invite a user at the new address
             // - Copy the relevant data to the new user
@@ -281,13 +286,14 @@ namespace Membership.Services
             if(invitedUser == null)
             {
                 _logger.LogError("User {EMail} already exists, cannot copy data", newAddress);
-                return false;
+
+                throw new Exception($"User {newAddress} already exists, cannot copy data");                
             }
 
             await UpdateMemberAsync(invitedUser.Id, user.DisplayName, user.IsActive, user.Expiration, user.GivenName, user.Surname, user.GitHubId, user.TwitterId, user.BlogUrl, user.PhotoBytes);
 
             // Copy any groups aside from the Members group
-            var groupRequest = await _graphApplicationClient.Users[id].GetMemberGroups().Request().PostAsync();
+            var groupRequest = await _graphApplicationClient.Users[id].GetMemberGroups(securityEnabledOnly: false).Request().PostAsync();
             var groups = new List<string>();
             groups.AddRange(groupRequest.CurrentPage);
             {
@@ -317,7 +323,7 @@ namespace Membership.Services
             await _graphApplicationClient.Users[id].Request().DeleteAsync();
             _logger.LogInformation("Removed old user {id}", id);
 
-            return true;
+            return invitedUser.Id;
         }
 
         private static MemberModel FromUser(User user)

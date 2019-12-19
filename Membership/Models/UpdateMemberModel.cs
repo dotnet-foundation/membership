@@ -42,5 +42,7 @@ namespace Membership.Models
 
         [Display(Name = "Profile Photo (jpeg, max 100kb)")]
         public IFormFile PhotoUpload { get; set; }
+
+        public string SignInAddress { get; set; }
     }
 }

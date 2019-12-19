@@ -16,7 +16,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit" asp-antiforgery="true">
+        <form asp-antiforgery="true">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="DisplayName" class="control-label"></label>
@@ -67,8 +67,19 @@
 
             </div>
             <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-default" />
+                <input type="submit" value="Save" class="btn btn-default" asp-action="Edit"  />
             </div>
+
+            <div class="form-group">
+                <label asp-for="SignInAddress" class="control-label"></label>
+                <input asp-for="SignInAddress" class="form-control" />
+                <span asp-validation-for="SignInAddress" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Change Sign In Address" class="btn" asp-action="ChangeMemberEmail" asp-route-id="@Model.Id" />
+            </div>
+
         </form>
     </div>
 </div>
