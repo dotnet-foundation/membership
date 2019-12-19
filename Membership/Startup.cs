@@ -33,6 +33,9 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
+using Microsoft.Identity.Web;
+using Microsoft.Identity.Web.TokenCacheProviders.InMemory;
+using Microsoft.Identity.Web.TokenCacheProviders.Session;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Membership
@@ -69,12 +72,16 @@ namespace Membership
             });
 
 
-            services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
-                .AddAzureAD(options => Configuration.Bind("AzureAd", options));
-
-            services
-              .AddTokenAcquisition()
-              .AddSessionBasedTokenCache();
+            // Token acquisition service based on MSAL.NET
+            // and chosen token cache implementation
+            services.AddMicrosoftIdentityPlatformAuthentication(Configuration)
+                    .AddMsal(Configuration, new[]
+                        {
+                            Constants.ScopeDirectoryAccessAsUserAll,
+                            Constants.ScopeUserReadWrite
+                        }
+                            )
+                    .AddSessionTokenCaches();
 
             services.AddSession();
             
@@ -86,76 +93,18 @@ namespace Membership
 
             services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
             {
-                options.Authority = options.Authority + "/v2.0/";         // Azure AD v2.0
-
-
-                options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
-
-                options.TokenValidationParameters.IssuerValidator = AadIssuerValidator.ValidateAadIssuer;
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
-                options.Scope.Add("offline_access");
-                options.Scope.Add("https://graph.microsoft.com/Directory.AccessAsUser.All");
-                options.Scope.Add("https://graph.microsoft.com/User.ReadWrite");
 
-                options.Events = new OpenIdConnectEvents
+                options.Events.OnRemoteFailure = context =>
                 {
-                    OnRemoteFailure = context =>
+                    if (context.Request.Form["error_description"].FirstOrDefault()?.Contains("AADSTS50105") == true)
                     {
-                        if (context.Request.Form["error_description"].FirstOrDefault()?.Contains("AADSTS50105") == true)
-                        {
-                            context.HandleResponse();
-                            context.Response.Redirect($"{context.Request.Scheme}://{context.Request.Host}/Home/AccessDenied");
-                        }
-                        return Task.CompletedTask;
-                    },
-
-                    OnAuthorizationCodeReceived = async context =>
-                    {
-                        var tokenAcquisition = context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
-                        await tokenAcquisition.AddAccountToCacheFromAuthorizationCode(context, options.Scope);
-                    },
-
-                    OnRedirectToIdentityProviderForSignOut = async context =>
-                    {
-                        var user = context.HttpContext.User;
-
-                        // Avoid displaying the select account dialog
-                        context.ProtocolMessage.LoginHint = user.GetLoginHint();
-                        context.ProtocolMessage.DomainHint = user.GetDomainHint();
-
-                        // Remove the account from MSAL.NET token cache
-                        var _tokenAcquisition = context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
-                        await _tokenAcquisition.RemoveAccount(context);
-                    },
-
-                    // Avoids having users being presented the select account dialog when they are already signed-in
-                    // for instance when going through incremental consent 
-                    OnRedirectToIdentityProvider = context =>
-                    {
-                        var login = context.Properties.GetParameter<string>(OpenIdConnectParameterNames.LoginHint);
-                        if (!string.IsNullOrWhiteSpace(login))
-                        {
-                            context.ProtocolMessage.LoginHint = login;
-                            context.ProtocolMessage.DomainHint = context.Properties.GetParameter<string>(OpenIdConnectParameterNames.DomainHint);
-
-                            // delete the loginhint and domainHint from the Properties when we are done otherwise 
-                            // it will take up extra space in the cookie.
-                            context.Properties.Parameters.Remove(OpenIdConnectParameterNames.LoginHint);
-                            context.Properties.Parameters.Remove(OpenIdConnectParameterNames.DomainHint);
-                        }
-
-                        // Additional claims
-                        const string claims = "claims";
-                        if (context.Properties.Items.ContainsKey(claims))
-                        {
-                            context.ProtocolMessage.SetParameter(claims, context.Properties.Items[claims]);
-                        }
-
-                        return Task.CompletedTask;
+                        context.HandleResponse();
+                        context.Response.Redirect($"{context.Request.Scheme}://{context.Request.Host}/Home/AccessDenied");
                     }
+                    return Task.CompletedTask;
                 };
-
             });
 
             services.Configure<CookieAuthenticationOptions>(AzureADDefaults.CookieScheme, options =>
@@ -175,11 +124,11 @@ namespace Membership
             });
 
 
-            services.Configure<JwtBearerOptions>(AzureADDefaults.JwtBearerAuthenticationScheme, options =>
-            {
-                options.TokenValidationParameters.NameClaimType = "name";
-                options.TokenValidationParameters.RoleClaimType = "roles";
-            });
+            //services.Configure<JwtBearerOptions>(AzureADDefaults.JwtBearerAuthenticationScheme, options =>
+            //{
+            //    options.TokenValidationParameters.NameClaimType = "name";
+            //    options.TokenValidationParameters.RoleClaimType = "roles";
+            //});
 
             services.AddMvc(options =>
             {
@@ -197,11 +146,16 @@ namespace Membership
             services.AddSingleton<IGraphApplicationClient>(sp =>
             {
                 var oidc = sp.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(AzureADDefaults.OpenIdScheme);
-                var app = new ConfidentialClientApplication(oidc.ClientId, oidc.Authority, "https://not/used", new ClientCredential(oidc.ClientSecret), null, new TokenCache());
+                var app = ConfidentialClientApplicationBuilder.Create(oidc.ClientId)
+                        .WithAuthority(oidc.Authority)
+                        .WithClientSecret(oidc.ClientSecret)
+                        .Build();
 
+                //var app = new ConfidentialClientApplication(oidc.ClientId, oidc.Authority, "https://not/used", new ClientCredential(oidc.ClientSecret), null, new TokenCache());
+                
                 return new GraphClient(new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
                 {
-                    var accessToken = await app.AcquireTokenForClientAsync(new[] { "https://graph.microsoft.com/.default" });
+                    var accessToken = await app.AcquireTokenForClient(new[] { "https://graph.microsoft.com/.default" }).ExecuteAsync();
 
                     requestMessage
                         .Headers
@@ -213,9 +167,8 @@ namespace Membership
             {
                 return new GraphClient(new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
                 {
-                    var http = sp.GetRequiredService<IHttpContextAccessor>().HttpContext;
                     var tokens = sp.GetRequiredService<ITokenAcquisition>();
-                    var accessToken = await tokens.GetAccessTokenOnBehalfOfUser(http, new[] { "https://graph.microsoft.com/Directory.AccessAsUser.All", "https://graph.microsoft.com/User.ReadWrite" });
+                    var accessToken = await tokens.GetAccessTokenOnBehalfOfUserAsync(new[] { Constants.ScopeDirectoryAccessAsUserAll, Constants.ScopeUserReadWrite });
 
                     requestMessage
                         .Headers
