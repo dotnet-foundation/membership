@@ -4,8 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Membership.Models;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Newtonsoft.Json.Linq;
@@ -16,12 +17,16 @@ namespace Membership.Services
     {
         private readonly IGraphServiceClient _graphApplicationClient;
         private readonly IHttpContextAccessor _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ILogger<UsersService> _logger;
         private readonly string _membersGroupId;
 
-        public UsersService(IGraphApplicationClient graphClient, IHttpContextAccessor context, IOptions<AdminConfig> options)
+        public UsersService(IGraphApplicationClient graphClient, IHttpContextAccessor context, IWebHostEnvironment webHostEnvironment, IOptions<AdminConfig> options, ILogger<UsersService> logger)
         {
             _graphApplicationClient = graphClient;
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
+            _logger = logger;
             _membersGroupId = options.Value.MembersGroupId;
         }
 
@@ -167,6 +172,109 @@ namespace Membership.Services
             var user = await _graphApplicationClient.Users[id].Request().UpdateAsync(toUpdate);
         }
 
+
+        public async Task InviteMember(string displayName, string firstName, string emailAddress)
+        {
+
+            const string emailSender = "jon@dotnetfoundation.org";
+            const string emailSubject = ".NET Foundation: Please Activate Your Membership";
+            const string redirectUrl = "https://members.dotnetfoundation.org/Profile";
+
+            var path = Path.Combine(_webHostEnvironment.ContentRootPath, "MemberInvitation");
+            var mailTemplate = await System.IO.File.ReadAllTextAsync(Path.Combine(path, "email-template.html"));
+            var attachments = new MessageAttachmentsCollectionPage
+            {
+                await GetImageAttachement(path, "header.png"),
+                await GetImageAttachement(path, "footer.png")
+            };
+
+            //const string groupId = "6eee9cd2-a055-433d-8ff1-07ca1d0f6fb7"; //Test Members
+            //We can look up the Members group by name, but in this case it's constant
+            //var group = await _graphApplicationClient
+            //        .Groups.Request().Filter("startswith(displayName,'Members')")
+            //        .GetAsync();
+            //string groupId = group[0].Id;
+
+            string redeemUrl;
+            try
+            {
+
+                //If we wanted to check if members are in the group first, could use this
+                //var existing = await _graphApplicationClient
+                //        .Groups[groupId]
+                //        .Members.Request().Select("id,mail").GetAsync();
+
+                var invite = new Invitation
+                {
+                    InvitedUserEmailAddress = emailAddress,
+                    SendInvitationMessage = false,
+                    InviteRedirectUrl = redirectUrl,
+                    InvitedUserDisplayName = displayName
+                };
+
+                var result = await _graphApplicationClient.Invitations.Request().AddAsync(invite);
+
+                redeemUrl = result.InviteRedeemUrl;
+
+                // Add to member group
+                await _graphApplicationClient
+                    .Groups[Constants.MembersGroupId]
+                    .Members.References.Request()
+                    .AddAsync(result.InvitedUser);
+            }
+            catch (Exception)
+            {
+                //They're already added to the group, so we can break without sending e-mail
+                _logger.LogWarning("User exists: {DisplayName}: {EMail}", displayName, emailAddress);
+                return;
+            }
+
+            var recipients = new List<Recipient>
+                    {
+                        new Recipient
+                        {
+                            EmailAddress = new EmailAddress
+                            {
+                                Name = displayName,
+                                Address = emailAddress
+                            }
+                        }
+                    };
+
+            // Create the message.
+            var email = new Message
+            {
+                Body = new ItemBody
+                {
+                    //TODO Replace with e-mail template
+                    Content = mailTemplate
+                        .Replace("{{action}}", redeemUrl)
+                        .Replace("{{name}}", firstName),
+                    ContentType = BodyType.Html,
+                },
+                HasAttachments = true,
+                Attachments = attachments,
+                Subject = emailSubject,
+                ToRecipients = recipients
+            };
+
+            // Send the message.
+            await _graphApplicationClient.Users[emailSender].SendMail(email, true).Request().PostAsync();
+            _logger.LogInformation("Invite: {DisplayName}: {EMail}", displayName, emailAddress);
+        }
+
+        //public async Task ChangeMemberLogonAddress(string id, string newAddress)
+        //{
+        //    // This method needs to
+        //    // - invite a user at the new address
+        //    // - Copy the relevant data to the new user
+        //    // - delete the current user
+
+        //    var user = await GetMemberById(id);
+
+
+        //}
+
         private static MemberModel FromUser(User user)
         {
             // check email in two places: 1 Mail, 2 Other Mailss
@@ -213,6 +321,20 @@ namespace Membership.Services
 
             return soi == 0xd8ff && (marker & 0xe0ff) == 0xe0ff;
 
+        }
+
+        private async Task<Attachment> GetImageAttachement(string path, string filename)
+        {
+            var bytes = await System.IO.File.ReadAllBytesAsync(Path.Combine(path, filename));
+
+            return new FileAttachment
+            {
+                ODataType = "#microsoft.graph.fileAttachment",
+                ContentBytes = bytes,
+                ContentType = "image/png",
+                ContentId = filename,
+                Name = filename
+            };
         }
     }
 }
