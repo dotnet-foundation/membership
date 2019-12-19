@@ -44,7 +44,7 @@ namespace Membership.Services
 
             // Get users in the group
 
-            var userRequest = _graphApplicationClient.Groups[_membersGroupId].Members.Request().Select("dotnetfoundation_member,givenName,surname,mail,otherMails,displayName");
+            var userRequest = _graphApplicationClient.Groups[_membersGroupId].Members.Request().Select("dotnetfoundation_member,id,givenName,surname,mail,otherMails,displayName");
 
             do
             {
@@ -66,7 +66,7 @@ namespace Membership.Services
 
         public async Task<MemberModel> GetMemberById(string id)
         {
-            var user = await _graphApplicationClient.Users[id].Request().Select("dotnetfoundation_member,givenName,surname,mail,otherMails,displayName").GetAsync();
+            var user = await _graphApplicationClient.Users[id].Request().Select("dotnetfoundation_member,id,givenName,surname,mail,otherMails,displayName").GetAsync();
 
             try
             {
