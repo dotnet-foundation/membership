@@ -7,6 +7,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.ApplicationInsights;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
@@ -40,8 +41,12 @@ namespace Membership
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .UseApplicationInsights()
                 .UseSerilog()
-                .UseStartup<Startup>();
+                .UseStartup<Startup>()
+                .ConfigureLogging(logging =>
+                {
+                    logging.AddApplicationInsights();
+                    logging.AddFilter<ApplicationInsightsLoggerProvider>("", LogLevel.Information);
+                });
     }
 }

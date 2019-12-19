@@ -11,16 +11,17 @@ pr:
       - rel/*
 
 pool:
-  vmImage: vs2017-win2016
+  vmImage: windows-latest
 
 variables: 
   BuildConfiguration: Release
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
 
 steps:
-- task: DotNetCoreInstaller@0
+- task: UseDotNet@2
+  displayName: 'Use .NET Core SDK 3.1.x'
   inputs:
-    version: '2.2.103'
+    version: 3.1.x
 
 - task: DotNetCoreCLI@2
   inputs:
@@ -41,9 +42,6 @@ steps:
     arguments: '-c $(BuildConfiguration) --output $(build.artifactstagingdirectory)\website\'
     zipAfterPublish: True
 
-- task: PublishBuildArtifacts@1
-  displayName: Publish website Artifact
-  inputs:
-    pathToPublish: $(Build.ArtifactStagingDirectory)\website
-    artifactType: container
-    artifactName: Website
+- publish: $(Build.ArtifactStagingDirectory)\website
+  displayName: Publish website artifact
+  artifact: Website

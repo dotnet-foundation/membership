@@ -21,10 +21,10 @@ namespace Membership.Controllers
     {
         private readonly IGraphDelegatedClient _graphDelegatedClient;
         private readonly IGraphServiceClient _graphApplicationClient;
-        private readonly IHostingEnvironment _hostingEnvironment;
-        ILogger<SetupController> _logger;
+        private readonly IWebHostEnvironment _hostingEnvironment;
+        private readonly ILogger<SetupController> _logger;
 
-        public SetupController(IGraphDelegatedClient graphDelegatedClient, IGraphApplicationClient graphApplicationClient, IHostingEnvironment hostingEnvironment, ILogger<SetupController> logger)
+        public SetupController(IGraphDelegatedClient graphDelegatedClient, IGraphApplicationClient graphApplicationClient, IWebHostEnvironment hostingEnvironment, ILogger<SetupController> logger)
         {
             _graphDelegatedClient = graphDelegatedClient;
             _graphApplicationClient = graphApplicationClient;
@@ -42,11 +42,13 @@ namespace Membership.Controllers
             const string emailSubject = ".NET Foundation: Please Activate Your Membership";
             const string redirectUrl = "https://members.dotnetfoundation.org/Profile";
 
-            string path = Path.Combine(_hostingEnvironment.ContentRootPath, "MemberInvitation");
-            string mailTemplate = await System.IO.File.ReadAllTextAsync(Path.Combine(path, "email-template.html"));
-            var attachments = new MessageAttachmentsCollectionPage();
-            attachments.Add(await GetImageAttachement(path, "header.png"));
-            attachments.Add(await GetImageAttachement(path, "footer.png"));
+            var path = Path.Combine(_hostingEnvironment.ContentRootPath, "MemberInvitation");
+            var mailTemplate = await System.IO.File.ReadAllTextAsync(Path.Combine(path, "email-template.html"));
+            var attachments = new MessageAttachmentsCollectionPage
+            {
+                await GetImageAttachement(path, "header.png"),
+                await GetImageAttachement(path, "footer.png")
+            };
 
             const string groupId = "940ac926-845c-489b-a270-eb961ca4ca8f"; //Members
             //const string groupId = "6eee9cd2-a055-433d-8ff1-07ca1d0f6fb7"; //Test Members
@@ -69,11 +71,13 @@ namespace Membership.Controllers
 
                 foreach (var member in members)
                 {
-                    Invitation invite = new Invitation();
-                    invite.InvitedUserEmailAddress = member.EMail.Trim();
-                    invite.SendInvitationMessage = false;
-                    invite.InviteRedirectUrl = redirectUrl;
-                    invite.InvitedUserDisplayName = member.FirstName + " " + member.LastName;
+                    var invite = new Invitation
+                    {
+                        InvitedUserEmailAddress = member.EMail.Trim(),
+                        SendInvitationMessage = false,
+                        InviteRedirectUrl = redirectUrl,
+                        InvitedUserDisplayName = member.FirstName + " " + member.LastName
+                    };
 
                     var result = await _graphApplicationClient.Invitations.Request().AddAsync(invite);
 
@@ -84,25 +88,27 @@ namespace Membership.Controllers
                             .Members.References.Request()
                             .AddAsync(result.InvitedUser);
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         //They're already added to the group, so we can break without sending e-mail
                         _logger.LogWarning("User exists: {FirstName} {LastName}: {EMail}", member.FirstName, member.LastName, member.EMail);
                         continue;
                     }
 
-                    List<Recipient> recipients = new List<Recipient>();
-                    recipients.Add(new Recipient
+                    var recipients = new List<Recipient>
                     {
-                        EmailAddress = new EmailAddress
+                        new Recipient
                         {
-                            Name = member.FirstName + " " + member.LastName,
-                            Address = member.EMail
+                            EmailAddress = new EmailAddress
+                            {
+                                Name = member.FirstName + " " + member.LastName,
+                                Address = member.EMail
+                            }
                         }
-                    });
+                    };
 
                     // Create the message.
-                    Message email = new Message
+                    var email = new Message
                     {
                         Body = new ItemBody
                         {

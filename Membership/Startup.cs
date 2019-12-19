@@ -10,7 +10,9 @@ using System.Threading.Tasks;
 using Membership.Models;
 using Membership.Services;
 using Microsoft.ApplicationInsights.AspNetCore;
+using Microsoft.ApplicationInsights.AspNetCore.TelemetryInitializers;
 using Microsoft.ApplicationInsights.Channel;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.SnapshotCollector;
 using Microsoft.AspNetCore.Authentication;
@@ -26,6 +28,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
@@ -46,12 +49,14 @@ namespace Membership
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // https://github.com/dotnet/coreclr/issues/21743 there's a regression in 2.2 for now
             // Configure SnapshotCollector from application settings
-            //services.Configure<SnapshotCollectorConfiguration>(Configuration.GetSection(nameof(SnapshotCollectorConfiguration)));
+            services.Configure<SnapshotCollectorConfiguration>(Configuration.GetSection(nameof(SnapshotCollectorConfiguration)));
+            services.AddApplicationInsightsTelemetry();
 
             // Add SnapshotCollector telemetry processor.
-            //    services.AddSingleton<ITelemetryProcessorFactory>(sp => new SnapshotCollectorTelemetryProcessorFactory(sp));
+            services.AddSingleton<ITelemetryProcessorFactory>(sp => new SnapshotCollectorTelemetryProcessorFactory(sp));
+            services.AddSingleton<ITelemetryInitializer, VersionTelemetry>();
+            services.AddSingleton<ITelemetryInitializer, UserTelemetry>();
 
             JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -63,6 +68,7 @@ namespace Membership
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
 
+
             services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
                 .AddAzureAD(options => Configuration.Bind("AzureAd", options));
 
@@ -71,7 +77,7 @@ namespace Membership
               .AddSessionBasedTokenCache();
 
             services.AddSession();
-            //.AddCookieBasedTokenCache(); // cookies are too large, yield 400 errors on IIS
+            
 
             services.Configure<SessionOptions>(options =>
             {
@@ -81,10 +87,10 @@ namespace Membership
             services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
             {
                 options.Authority = options.Authority + "/v2.0/";         // Azure AD v2.0
-                
+
 
                 options.ResponseType = OpenIdConnectResponseType.CodeIdToken;
-           
+
                 options.TokenValidationParameters.IssuerValidator = AadIssuerValidator.ValidateAadIssuer;
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
@@ -96,10 +102,10 @@ namespace Membership
                 {
                     OnRemoteFailure = context =>
                     {
-                        if(context.Request.Form["error_description"].FirstOrDefault()?.Contains("AADSTS50105") == true)
+                        if (context.Request.Form["error_description"].FirstOrDefault()?.Contains("AADSTS50105") == true)
                         {
                             context.HandleResponse();
-                            context.Response.Redirect($"{context.Request.Scheme}://{context.Request.Host}/Home/AccessDenied");                            
+                            context.Response.Redirect($"{context.Request.Scheme}://{context.Request.Host}/Home/AccessDenied");
                         }
                         return Task.CompletedTask;
                     },
@@ -174,15 +180,14 @@ namespace Membership
                 options.TokenValidationParameters.NameClaimType = "name";
                 options.TokenValidationParameters.RoleClaimType = "roles";
             });
-            
+
             services.AddMvc(options =>
             {
                 var policy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()                    
+                    .RequireAuthenticatedUser()
                     .Build();
                 options.Filters.Add(new AuthorizeFilter(policy));
-            })
-            .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            });
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
@@ -193,7 +198,7 @@ namespace Membership
             {
                 var oidc = sp.GetRequiredService<IOptionsMonitor<OpenIdConnectOptions>>().Get(AzureADDefaults.OpenIdScheme);
                 var app = new ConfidentialClientApplication(oidc.ClientId, oidc.Authority, "https://not/used", new ClientCredential(oidc.ClientSecret), null, new TokenCache());
-                
+
                 return new GraphClient(new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
                 {
                     var accessToken = await app.AcquireTokenForClientAsync(new[] { "https://graph.microsoft.com/.default" });
@@ -218,6 +223,7 @@ namespace Membership
                 })));
             });
 
+
             services.AddScoped<UsersService>();
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -225,9 +231,7 @@ namespace Membership
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app,
-                              ILoggerFactory loggerFactory,
-                              IServiceProvider serviceProvider,
-                              IHostingEnvironment env)
+                              IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
@@ -242,76 +246,75 @@ namespace Membership
                 app.UseExceptionHandler("/Home/Error");
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
-            }
-
-            loggerFactory.AddApplicationInsights(serviceProvider, Microsoft.Extensions.Logging.LogLevel.Information);
-
-            TelemetryConfiguration.Active.TelemetryInitializers.Add(new VersionTelemetry());
+            } 
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
             app.UseSession();
 
+            app.UseRouting();
+
             // Allow local development without KeyVault access using "Local Development" launch profile
-            if (this.Configuration["AzureAd:ClientId"] != null)
+            if (Configuration["AzureAd:ClientId"] != null)
             {
-                // Workaround Safari Same-site cookie issues
-                // https://brockallen.com/2019/01/11/same-site-cookies-asp-net-core-and-external-authentication-providers/
-                app.Use(async (ctx, next) =>
-                {
-                    var schemes = ctx.RequestServices.GetRequiredService<IAuthenticationSchemeProvider>();
-                    var handlers = ctx.RequestServices.GetRequiredService<IAuthenticationHandlerProvider>();
-                    foreach (var scheme in await schemes.GetRequestHandlerSchemesAsync())
-                    {
-                        var handler = await handlers.GetHandlerAsync(ctx, scheme.Name) as IAuthenticationRequestHandler;
-                        if (handler != null && await handler.HandleRequestAsync())
-                        {
-                        // start same-site cookie special handling
-                        string location = null;
-                            if (ctx.Response.StatusCode == 302)
-                            {
-                                location = ctx.Response.Headers["location"];
-                            }
-                            else if (ctx.Request.Method == "GET" && !ctx.Request.Query["skip"].Any())
-                            {
-                                location = ctx.Request.Path + ctx.Request.QueryString + "&skip=1";
-                            }
+                //// Workaround Safari Same-site cookie issues
+                //// https://brockallen.com/2019/01/11/same-site-cookies-asp-net-core-and-external-authentication-providers/
+                //app.Use(async (ctx, next) =>
+                //{
+                //    var schemes = ctx.RequestServices.GetRequiredService<IAuthenticationSchemeProvider>();
+                //    var handlers = ctx.RequestServices.GetRequiredService<IAuthenticationHandlerProvider>();
+                //    foreach (var scheme in await schemes.GetRequestHandlerSchemesAsync())
+                //    {
+                //        var handler = await handlers.GetHandlerAsync(ctx, scheme.Name) as IAuthenticationRequestHandler;
+                //        if (handler != null && await handler.HandleRequestAsync())
+                //        {
+                //        // start same-site cookie special handling
+                //        string location = null;
+                //            if (ctx.Response.StatusCode == 302)
+                //            {
+                //                location = ctx.Response.Headers["location"];
+                //            }
+                //            else if (ctx.Request.Method == "GET" && !ctx.Request.Query["skip"].Any())
+                //            {
+                //                location = ctx.Request.Path + ctx.Request.QueryString + "&skip=1";
+                //            }
 
-                            if (location != null)
-                            {
-                                ctx.Response.StatusCode = 200;
-                                var html = $@"
-                        <html><head>
-                            <meta http-equiv='refresh' content='0;url={location}' />
-                        </head></html>";
-                                await ctx.Response.WriteAsync(html);
-                            }
-                        // end same-site cookie special handling
+                //            if (location != null)
+                //            {
+                //                ctx.Response.StatusCode = 200;
+                //                var html = $@"
+                //        <html><head>
+                //            <meta http-equiv='refresh' content='0;url={location}' />
+                //        </head></html>";
+                //                await ctx.Response.WriteAsync(html);
+                //            }
+                //        // end same-site cookie special handling
 
-                        return;
-                        }
-                    }
+                //        return;
+                //        }
+                //    }
 
 
-                    await next();
-                });
+                //    await next();
+                //});
 
                 app.UseAuthentication();
+                app.UseAuthorization();
             }
 
-            app.UseMvc(routes =>
+            app.UseEndpoints(endpoints =>
             {
-                routes.MapRoute(
+                endpoints.MapControllerRoute(
                     name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                endpoints.MapRazorPages();
             });
         }
 
-
-        class SnapshotCollectorTelemetryProcessorFactory : ITelemetryProcessorFactory
+        private class SnapshotCollectorTelemetryProcessorFactory : ITelemetryProcessorFactory
         {
-            readonly IServiceProvider _serviceProvider;
+            private readonly IServiceProvider _serviceProvider;
 
             public SnapshotCollectorTelemetryProcessorFactory(IServiceProvider serviceProvider) =>
                 _serviceProvider = serviceProvider;
@@ -323,11 +326,41 @@ namespace Membership
             }
         }
 
-        class VersionTelemetry : ITelemetryInitializer
+        private class VersionTelemetry : ITelemetryInitializer
         {
             public void Initialize(ITelemetry telemetry)
             {
                 telemetry.Context.Component.Version = Program.AssemblyInformationalVersion;
+            }
+        }
+
+        private class UserTelemetry : TelemetryInitializerBase
+        {
+            public UserTelemetry(IHttpContextAccessor httpContextAccessor) : base(httpContextAccessor)
+            {
+            }
+
+            protected override void OnInitializeTelemetry(HttpContext platformContext, RequestTelemetry requestTelemetry, ITelemetry telemetry)
+            {
+                if (platformContext.RequestServices == null)
+                    return;
+
+                var identity = platformContext.User.Identity;
+                if (!identity.IsAuthenticated)
+                    return;
+
+
+                var upn = ((ClaimsIdentity)identity).FindFirst("upn")?.Value;
+                if (upn != null)
+                    telemetry.Context.User.AuthenticatedUserId = upn;
+
+                var userId = ((ClaimsIdentity)identity).FindFirst("oid")?.Value;
+
+                if (userId == null)
+                    return;
+
+                telemetry.Context.User.Id = userId;
+                telemetry.Context.User.AccountId = userId;
             }
         }
     }
