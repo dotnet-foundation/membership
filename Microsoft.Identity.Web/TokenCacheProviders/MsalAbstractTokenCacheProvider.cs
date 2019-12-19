@@ -65,7 +65,8 @@ namespace Microsoft.Identity.Web.TokenCacheProviders
                     // In the case Web APIs, the token cache key is a hash of the access token used to call the Web API
                     JwtSecurityToken jwtSecurityToken = _httpContextAccessor.HttpContext.GetTokenUsedToCallWebAPI();
                     return (jwtSecurityToken != null) ? jwtSecurityToken.RawSignature
-                                                                      : _httpContextAccessor.HttpContext.User.GetMsalAccountId();
+                                                                      : (_httpContextAccessor.HttpContext.GetCookieValidatePrincipalContext()?.Principal ??
+                                                                         _httpContextAccessor.HttpContext.User).GetMsalAccountId();
             }
         }
 

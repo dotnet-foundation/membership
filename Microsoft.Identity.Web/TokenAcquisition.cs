@@ -408,17 +408,18 @@ namespace Microsoft.Identity.Web
             if (context == null)
                 throw new ArgumentNullException(nameof(context));
 
-            ClaimsPrincipal user = context.HttpContext.User;
+            CurrentHttpContext.StoreCookieValidatePrincipalContext(context);
+
             // See if the user exists
             var app = GetOrBuildConfidentialClientApplication();
 
-            IAccount account = await app.GetAccountAsync(context.HttpContext.User.GetMsalAccountId()).ConfigureAwait(false);
+            IAccount account = await app.GetAccountAsync(context.Principal.GetMsalAccountId()).ConfigureAwait(false);
 
             // Workaround for the guest account
             if (account == null)
             {
                 var accounts = await app.GetAccountsAsync().ConfigureAwait(false);
-                account = accounts.FirstOrDefault(a => a.Username == user.GetLoginHint());
+                account = accounts.FirstOrDefault(a => a.Username == context.Principal.GetLoginHint());
             }
 
             return account != null;

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace Microsoft.Identity.Web
@@ -24,6 +25,17 @@ namespace Microsoft.Identity.Web
         public static JwtSecurityToken GetTokenUsedToCallWebAPI(this HttpContext httpContext)
         {
             return httpContext.Items["JwtSecurityTokenUsedToCallWebAPI"] as JwtSecurityToken;
+        }
+
+
+        public static void StoreCookieValidatePrincipalContext(this HttpContext httpContext, CookieValidatePrincipalContext context)
+        {
+            httpContext.Items.Add("CookieValidatePrincipalContextMsalContext", context);
+        }
+
+        public static CookieValidatePrincipalContext GetCookieValidatePrincipalContext(this HttpContext httpContext)
+        {
+            return httpContext.Items["CookieValidatePrincipalContextMsalContext"] as CookieValidatePrincipalContext;
         }
     }
 }
