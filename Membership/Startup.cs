@@ -117,7 +117,7 @@ namespace Membership
                         
                         if(! await tokenAcquisition.HasTokenCacheForUser(context))
                         {
-                         //   context.RejectPrincipal();
+                            context.RejectPrincipal();
                         }                       
                     }
                 };
