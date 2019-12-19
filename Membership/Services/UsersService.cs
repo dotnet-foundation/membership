@@ -173,7 +173,7 @@ namespace Membership.Services
         }
 
 
-        public async Task InviteMember(string displayName, string firstName, string emailAddress)
+        public async Task<User> InviteMember(string displayName, string firstName, string emailAddress)
         {
 
             const string emailSender = "jon@dotnetfoundation.org";
@@ -196,6 +196,7 @@ namespace Membership.Services
             //string groupId = group[0].Id;
 
             string redeemUrl;
+            User invitedUser;
             try
             {
 
@@ -215,6 +216,7 @@ namespace Membership.Services
                 var result = await _graphApplicationClient.Invitations.Request().AddAsync(invite);
 
                 redeemUrl = result.InviteRedeemUrl;
+                invitedUser = result.InvitedUser;
 
                 // Add to member group
                 await _graphApplicationClient
@@ -226,7 +228,7 @@ namespace Membership.Services
             {
                 //They're already added to the group, so we can break without sending e-mail
                 _logger.LogWarning("User exists: {DisplayName}: {EMail}", displayName, emailAddress);
-                return;
+                return null;
             }
 
             var recipients = new List<Recipient>
@@ -261,19 +263,62 @@ namespace Membership.Services
             // Send the message.
             await _graphApplicationClient.Users[emailSender].SendMail(email, true).Request().PostAsync();
             _logger.LogInformation("Invite: {DisplayName}: {EMail}", displayName, emailAddress);
+
+            return invitedUser;
         }
 
-        //public async Task ChangeMemberLogonAddress(string id, string newAddress)
-        //{
-        //    // This method needs to
-        //    // - invite a user at the new address
-        //    // - Copy the relevant data to the new user
-        //    // - delete the current user
+        public async Task<bool> ChangeMemberLogonAddress(string id, string newAddress)
+        {
+            // This method needs to
+            // - invite a user at the new address
+            // - Copy the relevant data to the new user
+            // - delete the current user
 
-        //    var user = await GetMemberById(id);
+            var user = await GetMemberById(id);
+
+            var invitedUser = await InviteMember(user.DisplayName, user.GivenName, newAddress);
+
+            if(invitedUser == null)
+            {
+                _logger.LogError("User {EMail} already exists, cannot copy data", newAddress);
+                return false;
+            }
+
+            await UpdateMemberAsync(invitedUser.Id, user.DisplayName, user.IsActive, user.Expiration, user.GivenName, user.Surname, user.GitHubId, user.TwitterId, user.BlogUrl, user.PhotoBytes);
+
+            // Copy any groups aside from the Members group
+            var groupRequest = await _graphApplicationClient.Users[id].GetMemberGroups().Request().PostAsync();
+            var groups = new List<string>();
+            groups.AddRange(groupRequest.CurrentPage);
+            {
+                while(groupRequest.NextPageRequest != null)
+                {
+                    groupRequest = await groupRequest.NextPageRequest.PostAsync();
+                    groups.AddRange(groupRequest.CurrentPage);
+                }
+            }
+            var set = groups.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            set.Remove(Constants.MembersGroupId);
+
+            // Add the user to the groups
+            foreach(var gid in set)
+            {
+                await _graphApplicationClient
+                    .Groups[gid]
+                    .Members.References.Request()
+                    .AddAsync(invitedUser);
+
+                _logger.LogInformation("Added old user {user} to group {gid}", newAddress, gid);
+            }
 
 
-        //}
+            // Finally, delete the old user
+
+            await _graphApplicationClient.Users[id].Request().DeleteAsync();
+            _logger.LogInformation("Removed old user {id}", id);
+
+            return true;
+        }
 
         private static MemberModel FromUser(User user)
         {
@@ -296,11 +341,8 @@ namespace Membership.Services
                 member.TwitterId = ext.TwitterId;
                 member.GitHubId = ext.GitHubId;
                 member.BlogUrl = ext.BlogUrl;
-                if (ext.IsActive.HasValue)
-                    member.IsActive = ext.IsActive.Value;
-
-                if (ext.ExpirationDateTime.HasValue)
-                    member.Expiration = ext.ExpirationDateTime.Value;
+                member.IsActive = ext.IsActive;
+                member.Expiration = ext.ExpirationDateTime;
             }
 
             if (user.Photo != null && user.Photo.AdditionalData.ContainsKey("data"))
