@@ -15,17 +15,13 @@ namespace Membership.Services
     public class UsersService
     {
         private readonly IGraphServiceClient _graphApplicationClient;
-        private readonly IGraphDelegatedClient _graphDelegatedClient;
         private readonly IHttpContextAccessor _context;
-        private readonly IOptionsMonitor<OpenIdConnectOptions> _oidcOptions;
         private readonly string _membersGroupId;
 
-        public UsersService(IGraphApplicationClient graphClient, IGraphDelegatedClient graphDelegatedClient, IHttpContextAccessor context, IOptions<AdminConfig> options, IOptionsMonitor<OpenIdConnectOptions> oidcOptions)
+        public UsersService(IGraphApplicationClient graphClient, IHttpContextAccessor context, IOptions<AdminConfig> options)
         {
             _graphApplicationClient = graphClient;
-            _graphDelegatedClient = graphDelegatedClient;
             _context = context;
-            _oidcOptions = oidcOptions;
             _membersGroupId = options.Value.MembersGroupId;
         }
 
@@ -140,8 +136,7 @@ namespace Membership.Services
             {
                 using (var ms = new MemoryStream(profilePhoto))
                 {
-                    // Updating a profile photo must be in a delegated context for now
-                    await _graphDelegatedClient.Users[id].Photo.Content.Request().PutAsync(ms);
+                    await _graphApplicationClient.Users[id].Photo.Content.Request().PutAsync(ms);
                 }
             }
         }

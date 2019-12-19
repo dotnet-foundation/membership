@@ -10,7 +10,6 @@ using Membership.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging;
 using Microsoft.Graph;
 
@@ -19,14 +18,14 @@ namespace Membership.Controllers
     [Authorize(Roles = "admin")]
     public class SetupController : Controller
     {
-        private readonly IGraphDelegatedClient _graphDelegatedClient;
-        private readonly IGraphServiceClient _graphApplicationClient;
+       // private readonly IGraphDelegatedClient _graphDelegatedClient;
+        private readonly IGraphApplicationClient _graphApplicationClient;
         private readonly IWebHostEnvironment _hostingEnvironment;
         private readonly ILogger<SetupController> _logger;
 
-        public SetupController(IGraphDelegatedClient graphDelegatedClient, IGraphApplicationClient graphApplicationClient, IWebHostEnvironment hostingEnvironment, ILogger<SetupController> logger)
+        public SetupController(IGraphApplicationClient graphApplicationClient, IWebHostEnvironment hostingEnvironment, ILogger<SetupController> logger)
         {
-            _graphDelegatedClient = graphDelegatedClient;
+            //_graphDelegatedClient = graphDelegatedClient;
             _graphApplicationClient = graphApplicationClient;
             _hostingEnvironment = hostingEnvironment;
             _logger = logger;

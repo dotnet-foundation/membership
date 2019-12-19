@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net.Http.Headers;
-using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,28 +14,23 @@ using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.ApplicationInsights.SnapshotCollector;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.TokenCacheProviders.InMemory;
 using Microsoft.Identity.Web.TokenCacheProviders.Session;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
 namespace Membership
 {
@@ -77,19 +71,12 @@ namespace Membership
             services.AddMicrosoftIdentityPlatformAuthentication(Configuration)
                     .AddMsal(Configuration, new[]
                         {
-                            Constants.ScopeDirectoryAccessAsUserAll,
+                            //Constants.ScopeDirectoryAccessAsUserAll,
                             Constants.ScopeUserReadWrite
                         }
                             )
-                    .AddSessionTokenCaches();
-
-            services.AddSession();
-            
-
-            services.Configure<SessionOptions>(options =>
-            {
-                options.Cookie.IsEssential = true;
-            });
+                    .AddInMemoryTokenCaches();
+      
 
             services.Configure<OpenIdConnectOptions>(AzureADDefaults.OpenIdScheme, options =>
             {
@@ -106,29 +93,6 @@ namespace Membership
                     return Task.CompletedTask;
                 };
             });
-
-            services.Configure<CookieAuthenticationOptions>(AzureADDefaults.CookieScheme, options =>
-            {
-                options.Events = new CookieAuthenticationEvents
-                {
-                    OnValidatePrincipal = async context =>
-                    {
-                        var tokenAcquisition = context.HttpContext.RequestServices.GetRequiredService<ITokenAcquisition>();
-                        
-                        if(! await tokenAcquisition.HasTokenCacheForUser(context))
-                        {
-                            context.RejectPrincipal();
-                        }                       
-                    }
-                };
-            });
-
-
-            //services.Configure<JwtBearerOptions>(AzureADDefaults.JwtBearerAuthenticationScheme, options =>
-            //{
-            //    options.TokenValidationParameters.NameClaimType = "name";
-            //    options.TokenValidationParameters.RoleClaimType = "roles";
-            //});
 
             services.AddMvc(options =>
             {
@@ -151,8 +115,6 @@ namespace Membership
                         .WithClientSecret(oidc.ClientSecret)
                         .Build();
 
-                //var app = new ConfidentialClientApplication(oidc.ClientId, oidc.Authority, "https://not/used", new ClientCredential(oidc.ClientSecret), null, new TokenCache());
-                
                 return new GraphClient(new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
                 {
                     var accessToken = await app.AcquireTokenForClient(new[] { "https://graph.microsoft.com/.default" }).ExecuteAsync();
@@ -163,18 +125,18 @@ namespace Membership
                 })));
             });
 
-            services.AddScoped<IGraphDelegatedClient>(sp =>
-            {
-                return new GraphClient(new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
-                {
-                    var tokens = sp.GetRequiredService<ITokenAcquisition>();
-                    var accessToken = await tokens.GetAccessTokenOnBehalfOfUserAsync(new[] { Constants.ScopeDirectoryAccessAsUserAll, Constants.ScopeUserReadWrite });
+            //services.AddScoped<IGraphDelegatedClient>(sp =>
+            //{
+            //    return new GraphClient(new GraphServiceClient("https://graph.microsoft.com/beta", new DelegateAuthenticationProvider(async (requestMessage) =>
+            //    {
+            //        var tokens = sp.GetRequiredService<ITokenAcquisition>();
+            //        var accessToken = await tokens.GetAccessTokenOnBehalfOfUserAsync(new[] { Constants.ScopeUserReadWrite });
 
-                    requestMessage
-                        .Headers
-                        .Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-                })));
-            });
+            //        requestMessage
+            //            .Headers
+            //            .Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            //    })));
+            //});
 
 
             services.AddScoped<UsersService>();
@@ -204,7 +166,6 @@ namespace Membership
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
-            app.UseSession();
 
             app.UseRouting();
 
