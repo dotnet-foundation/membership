@@ -11,8 +11,8 @@ namespace Membership.Models
         public string DisplayName { get; set; }
         public string GivenName { get; set; }
         public string Surname { get; set; }
-        public bool IsActive { get; set; }
-        public DateTimeOffset Expiration { get; set; }
+        public bool? IsActive { get; set; }
+        public DateTimeOffset? Expiration { get; set; }
         public string Email { get; set; }
         public string GitHubId { get; set; }
         public string TwitterId { get; set; }

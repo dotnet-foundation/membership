@@ -42,8 +42,8 @@ namespace Membership.Controllers
                     GitHubId = member.GitHubId,
                     TwitterId = member.TwitterId,
                     BlogUrl = member.BlogUrl,
-                    Expiration = member.Expiration,
-                    IsActive = member.IsActive,
+                    Expiration = member.Expiration.GetValueOrDefault(),
+                    IsActive = member.IsActive.GetValueOrDefault(),
                     PhotoHeight = member.PhotoHeight,
                     PhotoWidth = member.PhotoWidth,
                     PhotoType = member.PhotoType,
@@ -96,6 +96,34 @@ namespace Membership.Controllers
             {
                 ModelState.TryAddModelError("", e.Message);
                 return View(model); 
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangeMemberEmail(string id, UpdateMemberModel model)
+        {
+            if(string.IsNullOrWhiteSpace(model.SignInAddress))
+            {
+                ModelState.AddModelError(nameof(model.SignInAddress), "Email address is required");
+            }
+
+            if(!ModelState.IsValid)
+            {
+                return View(nameof(Edit), model);
+            }
+
+            try
+            {
+
+                var newUserId = await _usersService.ChangeMemberLogonAddress(id, model.SignInAddress);
+
+                return RedirectToAction(nameof(Edit), new { id = newUserId });
+            }
+            catch(Exception e)
+            {
+                ModelState.TryAddModelError("", e.Message);
+                return View(nameof(Edit), model);
             }
         }
     }
