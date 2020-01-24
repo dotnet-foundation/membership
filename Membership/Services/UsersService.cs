@@ -176,7 +176,7 @@ namespace Membership.Services
         public async Task<User> InviteMember(string displayName, string firstName, string emailAddress)
         {
 
-            const string emailSender = "jon@dotnetfoundation.org";
+            const string emailSender = "membership@dotnetfoundation.org";
             const string emailSubject = ".NET Foundation: Please Activate Your Membership";
             const string redirectUrl = "https://members.dotnetfoundation.org/Profile";
 
