@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -34,7 +35,7 @@ namespace Membership.Controllers
 
             //TODO Handle CSV upload rather than read from disk
             using (var reader = new StreamReader("MemberInvitation\\azure_ad_b2b.csv", Encoding.GetEncoding(1252)))
-            using (var csv = new CsvReader(reader))
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 var members = csv.GetRecords<ImportMember>();
 

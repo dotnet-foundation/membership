@@ -80,12 +80,10 @@ namespace Membership.Controllers
 
                 if (model.PhotoUpload?.Length > 0)
                 {
-                    using (var ms = new MemoryStream((int)model.PhotoUpload.Length))
-                    {
-                        await model.PhotoUpload.CopyToAsync(ms);
-                        ms.Position = 0;
-                        buffer = ms.ToArray();
-                    }
+                    using var ms = new MemoryStream((int)model.PhotoUpload.Length);
+                    await model.PhotoUpload.CopyToAsync(ms);
+                    ms.Position = 0;
+                    buffer = ms.ToArray();
                 }
 
                 await _usersService.UpdateMemberAsync(id, model.DisplayName, null, null, model.GivenName, model.Surname, model.GitHubId, model.TwitterId, model.BlogUrl, buffer);

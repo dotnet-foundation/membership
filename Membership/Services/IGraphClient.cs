@@ -112,5 +112,7 @@ namespace Membership.Services
         public ICloudCommunicationsRequestBuilder Communications => _graphServiceClient.Communications;
 
         public IBatchRequestBuilder Batch => _graphServiceClient.Batch;
+
+        public IInformationProtectionRequestBuilder InformationProtection => _graphServiceClient.InformationProtection;
     }        
 }
