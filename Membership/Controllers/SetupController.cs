@@ -30,15 +30,36 @@ namespace Membership.Controllers
             return View();
         }
 
-        public async Task<IActionResult> AddMembers()
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddMembers(AddMembersRequestModel model)
         {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+            
+            using var ms = new MemoryStream();
+            //get file data
+            await model.CsvFile.CopyToAsync(ms);
+            ms.Position = 0;
 
-            //TODO Handle CSV upload rather than read from disk
-            using (var reader = new StreamReader("MemberInvitation\\azure_ad_b2b.csv", Encoding.GetEncoding(1252)))
+
+            // Peak at first three bytes to verify BOM
+            
+            var header = new byte[3];            
+            ms.Read(header, 0, 3);
+            var isUtf8 = header[0] == 0xef && header[1] == 0xbb && header[2] == 0xbf;
+            if (!isUtf8)
+                throw new ArgumentException("CSV is missing BOM", nameof(model.CsvFile));
+           
+
+            ms.Position = 0;
+
+            using (var reader = new StreamReader(ms, new UTF8Encoding(true, true)))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 var members = csv.GetRecords<ImportMember>();
-
 
                 foreach (var member in members)
                 {
