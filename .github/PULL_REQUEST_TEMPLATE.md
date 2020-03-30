@@ -7,10 +7,11 @@
 ## What's changed?
 
 ## Checklist
-- [] Tested in deployment enironment
-- [] Tested in alternate environment (please update here: )
+- [] Tested in deployment environment
+- [] Tested in an alternate environment (please update here: )
 - [] Major feature added
 - [] Bux fix
-- [] Other (explain: )
+- [x] Other (explain: PR template, repository maintenance)
 
 ## Additional information
+
