@@ -11,7 +11,7 @@
 [] Tested in an alternate environment (please update here: )
 [] Major feature added
 [] Bux fix
-[] Other (explain: PR template, repository maintenance)
+[] Other (explain: )
 
 ## Additional information
 
