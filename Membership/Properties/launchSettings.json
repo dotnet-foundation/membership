@@ -14,7 +14,8 @@
       "environmentVariables": {
         "ASPNETCORE_HOSTINGSTARTUP__KEYVAULT__CONFIGURATIONENABLED": "true",
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_HOSTINGSTARTUP__KEYVAULT__CONFIGURATIONVAULT": "https://dotnetfdnmembership.vault.azure.net"
+        "ASPNETCORE_HOSTINGSTARTUP__KEYVAULT__CONFIGURATIONVAULT": "https://dotnetfdnmembership.vault.azure.net",
+        "BASE_PATH": "/members"
       }
     },
     "Membership": {
@@ -46,7 +47,8 @@
       "environmentVariables": {
         "ASPNETCORE_HOSTINGSTARTUP__KEYVAULT__CONFIGURATIONENABLED": "true",
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_HOSTINGSTARTUP__KEYVAULT__CONFIGURATIONVAULT": "https://dotnetfdnmembership.vault.azure.net"
+        "ASPNETCORE_HOSTINGSTARTUP__KEYVAULT__CONFIGURATIONVAULT": "https://dotnetfdnmembership.vault.azure.net",
+        "BASE_PATH": "/members"
       }
     }
   }

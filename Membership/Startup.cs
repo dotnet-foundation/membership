@@ -159,6 +159,13 @@ namespace Membership
 
             app.UseForwardedHeaders();
 
+            var basePath = Environment.GetEnvironmentVariable("BASE_PATH");
+
+            if(!string.IsNullOrWhiteSpace(basePath))
+            {
+                app.UsePathBase(basePath);
+            }
+
             if (env.IsDevelopment())
             {
                 // Since IdentityModel version 5.2.1 (or since Microsoft.AspNetCore.Authentication.JwtBearer version 2.2.0),
