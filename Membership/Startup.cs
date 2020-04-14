@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -141,6 +142,13 @@ namespace Membership
 
             services.AddScoped<UsersService>();
 
+            // Need this to get host headers in App Service
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            });
+
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
 
@@ -148,6 +156,9 @@ namespace Membership
         public void Configure(IApplicationBuilder app,
                               IWebHostEnvironment env)
         {
+
+            app.UseForwardedHeaders();
+
             if (env.IsDevelopment())
             {
                 // Since IdentityModel version 5.2.1 (or since Microsoft.AspNetCore.Authentication.JwtBearer version 2.2.0),
