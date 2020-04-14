@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UserSecretsId>3802e110-417b-4d5c-9d77-90146df0fc9f</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileRunArguments>--env-file "$(appdata)\Microsoft\UserSecrets\$(UserSecretsId.Trim())\msi.env"</DockerfileRunArguments>
   </PropertyGroup>
 
   <ItemGroup>
