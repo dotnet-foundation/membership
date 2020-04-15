@@ -147,6 +147,10 @@ namespace Membership
             {
                 options.ForwardedHeaders =
                     ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                options.RequireHeaderSymmetry = false;
+                
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
             });
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
