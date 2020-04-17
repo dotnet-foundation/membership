@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>3802e110-417b-4d5c-9d77-90146df0fc9f</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileRunArguments>--env-file "$(appdata)\Microsoft\UserSecrets\$(UserSecretsId.Trim())\msi.env"</DockerfileRunArguments>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,9 +16,11 @@
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.13.1" />
     <PackageReference Include="Microsoft.ApplicationInsights.SnapshotCollector" Version="1.3.6" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.AzureAD.UI" Version="3.1.2" />
+    <PackageReference Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="3.1.3" />
     <PackageReference Include="Microsoft.AspNetCore.AzureKeyVault.HostingStartup" Version="2.0.4" />
     <PackageReference Include="Microsoft.Graph" Version="3.0.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.10.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.9" />
 
     <PackageReference Include="Nerdbank.GitVersioning" Version="3.1.71" PrivateAssets="all" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />

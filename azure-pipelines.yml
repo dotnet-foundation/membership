@@ -11,11 +11,18 @@ pr:
       - rel/*
 
 pool:
-  vmImage: windows-latest
+  vmImage: ubuntu-latest
 
 variables: 
   BuildConfiguration: Release
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+
+  # Container registry service connection established during pipeline creation
+  dockerRegistryServiceConnection: '0d3cc2fe-71c4-459b-ae14-ac93ff043725'
+  imageRepository: 'membership'
+  containerRegistry: 'dotnetfoundation.azurecr.io'
+  dockerfilePath: '**/Dockerfile'
+  tag: '$(Build.BuildId)'
 
 steps:
 - task: UseDotNet@2
@@ -30,18 +37,17 @@ steps:
     arguments: install --tool-path . nbgv
   displayName: Install NBGV tool
   
-- script: nbgv cloud
+- script: ./nbgv cloud
   displayName: Set Version
 
-- task: DotNetCoreCLI@2
-  displayName: Build and Publish
-  inputs:
-    command: publish
-    publishWebProjects: false
-    projects: Membership/Membership.csproj
-    arguments: '-c $(BuildConfiguration) --output $(build.artifactstagingdirectory)\website\'
-    zipAfterPublish: True
 
-- publish: $(Build.ArtifactStagingDirectory)\website
-  displayName: Publish website artifact
-  artifact: Website
+- task: Docker@2
+  displayName: Build and push an image to container registry
+  inputs:
+    command: buildAndPush
+    repository: $(imageRepository)
+    dockerfile: $(dockerfilePath)
+    buildContext: ./
+    containerRegistry: $(dockerRegistryServiceConnection)
+    tags: |
+      $(tag)
