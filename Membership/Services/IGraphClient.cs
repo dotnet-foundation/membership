@@ -114,5 +114,9 @@ namespace Membership.Services
         public IBatchRequestBuilder Batch => _graphServiceClient.Batch;
 
         public IInformationProtectionRequestBuilder InformationProtection => _graphServiceClient.InformationProtection;
+
+        public IPolicyRootRequestBuilder Policies => _graphServiceClient.Policies;
+
+        public ITeamworkRequestBuilder Teamwork => _graphServiceClient.Teamwork;
     }        
 }
