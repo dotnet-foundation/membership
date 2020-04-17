@@ -223,6 +223,7 @@
                                         <li><a href="/about/privacy-policy">Privacy Policy</a></li>
                                         <li><a href="/about/code-of-conduct">Code of Conduct</a></li>
                                         <li><a href="https://github.com/dotnet-foundation/website/issues">Site Problem?</a></li>
+                                        <partial name="_LoginPartial" />
                                     </ul>
                                 </div>
                             </div>
@@ -323,19 +324,6 @@
             </div>
         </footer>
     }
-
-
-
-
-    @if (hostEnv.IsStaging() || hostEnv.IsDevelopment())
-    {
-       
-    }
-    else
-    {
-
-    }
-
 
     <partial name="_CookieConsentPartial" />
 
