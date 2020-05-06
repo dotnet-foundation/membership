@@ -75,6 +75,11 @@ p {
 .page-section {
     width: 100vw;
     margin-left: calc((100vw - 1140px)/2*-1);
+    padding: 3rem 0;
+}
+
+.page-section--fill {
+    padding: 0;
 }
 
 .page-section--purple--light {
@@ -166,8 +171,6 @@ p {
 }
 
 .page-section h2, h3, h4 {
-    margin-top: 2rem;
-    margin-bottom: 0;
     font-family: 'Bree Serif', serif;
 }
 
@@ -188,9 +191,9 @@ p {
     font-size: 2rem;
 }
 
-.page-section p {
+/* .page-section p {
     font-size: 16px;
-}
+} */
 
 .page-section ul li {
     font-size: 16px;
@@ -287,6 +290,16 @@ svg.svg-inline--fa {
     .site-button--pink:hover {
         color: #e2068c;
         background-color: #ebe0eb;
+    }
+
+.site-button--orange {
+    border: 2px solid #ff6a00;
+    background-color: #ff6a00;
+    color: #fff !important;
+}
+
+    .site-button--orange:hover {
+        opacity: .8;
     }
 
 .animation-delay--8 {
@@ -500,8 +513,8 @@ svg.svg-inline--fa {
 
 .icon-box {
     background-color: #f6f6f6;
-    border: 1px solid #999999;
     padding: 2rem;
+    box-shadow: 0px 4px 20px -5px rgba(0,0,0,0.43);
 }
 
     .icon-box > * + * {
@@ -769,10 +782,16 @@ article.post {
     margin-left: 3rem;
 }
 
-    article.post header.jumbotron {
-        background-color: inherit;
-        padding: 0;
+@media screen and (max-width: 812px) {
+    article.post {
+        margin-left: 0;
     }
+}
+
+article.post header.jumbotron {
+    background-color: inherit;
+    padding: 0;
+}
 
 #sidenavtoggle {
     position: absolute;
@@ -1288,8 +1307,9 @@ svg:not(:root).svg-inline--fa {
 
 .corporate-sponsor-card {
     display: grid;
-    box-shadow: 0px 1px 5px #555;
     background-color: white;
+    padding: 2rem;
+    box-shadow: 0px 4px 20px -5px rgba(0,0,0,0.43);
 }
 
 .corporate-sponsor-card__thumbnail {
@@ -1370,3 +1390,100 @@ svg:not(:root).svg-inline--fa {
             .tabbed-index a.selected:hover {
                 color: white;
             }
+
+.logo-footer {
+    width: 135px;
+}
+
+.hidden {
+    display: none;
+}
+
+.committee_container {
+    display: flex;
+    margin-top: 2rem;
+}
+
+    .committee_container h2 {
+        margin-top: 0;
+    }
+
+.committee_meta {
+    flex-basis: 80%;
+    padding-left: 10px;
+}
+
+.committee_img_container {
+    min-width: 120px;
+    flex-basis: 20%;
+    min-height: 120px;
+}
+
+    .committee_img_container img {
+        height: 120px;
+        width: 120px;
+    }
+
+.sign-up-to-newsletter {
+    margin-top: 10px;
+}
+
+
+/* Profiles */
+.rounded-image {
+    border-radius: 50%;
+}
+
+.profile {
+    margin-bottom: 3rem;
+    text-align: center;
+    max-width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media screen and (min-width: 768px) {
+    .profile {
+        text-align: left;
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+.profile-name {
+    margin-bottom: 0.5rem;
+}
+
+.profile-image {
+    display: block;
+    margin: 0 auto 1rem auto;
+}
+
+@media screen and (min-width: 768px) {
+    .profile-image {
+        margin: 0 0 1rem 0;
+    }
+}
+
+/* TODO: remove element - requires cleanup of overall body styles */
+p.profile-location, p.profile-company {
+    font-size: 1.35rem;
+    margin: 0;
+}
+
+.profile-location {
+    font-style: italic;
+    padding-bottom: 0.25rem;
+}
+
+.profile-intro {
+    margin: 0.5rem 0;
+}
+
+    .profile-intro p {
+        margin: 0;
+    }
+
+.profile-details {
+    padding-bottom: 0.5rem;
+}
