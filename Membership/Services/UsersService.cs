@@ -178,7 +178,7 @@ namespace Membership.Services
 
             const string emailSender = "membership@dotnetfoundation.org";
             const string emailSubject = ".NET Foundation: Please Activate Your Membership";
-            const string redirectUrl = "https://members.dotnetfoundation.org/Profile";
+            const string redirectUrl = "https://dotnetfoundation.org/member/profile";
 
             var path = Path.Combine(_webHostEnvironment.ContentRootPath, "MemberInvitation");
             var mailTemplate = await System.IO.File.ReadAllTextAsync(Path.Combine(path, "email-template.html"));
