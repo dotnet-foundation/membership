@@ -119,9 +119,18 @@
                         <a class="btn btn-primary btn-lg" asp-action="PayDues" role="button">Pay Dues</a>
                     </div>
                 }
+                else if (DateTimeOffset.UtcNow > Model.Expiration)
+                {
+                    <h2>Your annual dues need to be renewed.</h2>
+                    <p>Due date: @Model.Expiration.ToString("d")</p>
+                    <p>
+                        See our <a asp-action="PayDues">Dues Information</a> to renew for another year.
+                    </p>
+                }
                 else
                 {
                     <h2>Your annual dues information is up to date.</h2>
+                    <p>Due date: @Model.Expiration.ToString("d")</p>
                     <p>
                         See our <a asp-action="PayDues">Dues Information</a> page for more information, or
                         to make an additional donation.
