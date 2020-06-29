@@ -63,7 +63,7 @@ namespace Membership.Controllers
 
                 foreach (var member in members)
                 {
-                    await _usersService.InviteMember($"{member.FirstName} {member.LastName}", member.FirstName, member.EMail);
+                    await _usersService.InviteMember($"{member.FirstName?.Trim()} {member.LastName?.Trim()}", member.FirstName?.Trim(), member.EMail?.Trim());
                 }
             }
 
