@@ -158,52 +158,50 @@
     </header>
 
     <div id="site_wrapper" class="container-fluid cs-container flex-fill">
-        <div class="row">
-            <main id="site_container" role="main" class="col order-3">
-                <section class="body-section">
-                    <div class="body-container">
-                        @RenderBody()                            
-                    </div>
-                </section>
+        <main id="site_container" role="main" class="col order-3">
+            <section class="body-section">
+                <div class="body-container">
+                    @RenderBody()
+                </div>
+            </section>
 
-                <!-- Footer -->
-                <footer id="site-footer" class="sticky-bottom h-card">
-                    <data class="u-url" href=""></data>
-                    <div id="site-footer_container" class="container">
-                        <div class="site-footer_row row">
-                            <div class="col-12 d-flex justify-content-between">
-                                <img src="/img/logo_v4.svg" class="logo-footer">
-                                <ul id="site-footer_menu" class="align-self-end">
-                                    <li><a href="/about/privacy-policy">Privacy Policy</a></li>
-                                    <li><a href="/about/code-of-conduct">Code of Conduct</a></li>
-                                    <li><a href="https://github.com/dotnet-foundation/membership/issues">Site Problem?</a></li>
-                                    <partial name="_LoginPartial" />
-                                </ul>
-                            </div>
-                        </div>                        
+            <!-- Footer -->
+            <footer id="site-footer" class="sticky-bottom h-card">
+                <data class="u-url" href=""></data>
+                <div id="site-footer_container" class="container">
+                    <div class="site-footer_row row">
+                        <div class="col-12 d-flex justify-content-between">
+                            <img src="/img/logo_v4.svg" class="logo-footer">
+                            <ul id="site-footer_menu" class="align-self-end">
+                                <li><a href="/about/privacy-policy">Privacy Policy</a></li>
+                                <li><a href="/about/code-of-conduct">Code of Conduct</a></li>
+                                <li><a href="https://github.com/dotnet-foundation/membership/issues">Site Problem?</a></li>
+                                <partial name="_LoginPartial" />
+                            </ul>
+                        </div>
                     </div>
-                    <div id="site-footer_bookend" class="">
-                        <div class="site-footer_container container">
-                            <div class="site-footer_row row">
-                                <div class="col-12 d-flex justify-content-end">
-                                    <p class="site-footer_textSection">
-                                        &copy; @DateTime.Now.Year .NET Foundation and Contributors.
-                                    </p>
-                                </div>
-                                <div class="col-12 d-flex justify-content-end">
-                                    <p class="site-footer_textSection">
-                                        You can <a href="https://github.com/dotnet-foundation/membership">contribute to this site on GitHub.</a>
-                                    </p>
-                                </div>
+                </div>
+                <div id="site-footer_bookend" class="">
+                    <div class="site-footer_container container">
+                        <div class="site-footer_row row">
+                            <div class="col-12 d-flex justify-content-end">
+                                <p class="site-footer_textSection">
+                                    &copy; @DateTime.Now.Year .NET Foundation and Contributors.
+                                </p>
+                            </div>
+                            <div class="col-12 d-flex justify-content-end">
+                                <p class="site-footer_textSection">
+                                    You can <a href="https://github.com/dotnet-foundation/membership">contribute to this site on GitHub.</a>
+                                </p>
                             </div>
                         </div>
                     </div>
-                </footer>
-                <!-- Footer End -->
-            </main>
-        </div>
+                </div>
+            </footer>
+            <!-- Footer End -->
+        </main>
     </div>
-    
+
 
     <partial name="_CookieConsentPartial" />
 
