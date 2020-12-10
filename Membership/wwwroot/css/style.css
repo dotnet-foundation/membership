@@ -1516,10 +1516,6 @@ p.profile-location, p.profile-company {
   .navbar-expand-md .ml-auto {
     margin-left: 0 !important;
   }
-
-  .mobile-items {
-    display: none;
-  }
 }
 
 @media (min-width: 992px) {
@@ -1552,6 +1548,10 @@ p.profile-location, p.profile-company {
 
   .navbar-expand-md .ml-auto {
     margin-left: auto !important;
+  }
+
+  .mobile-items {
+    display: none;
   }
 }
 
