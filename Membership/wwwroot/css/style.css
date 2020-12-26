@@ -1605,3 +1605,7 @@ p.profile-location, p.profile-company {
     display: none;
   }
 }
+
+.btn {
+    font-size: 18px;
+}
