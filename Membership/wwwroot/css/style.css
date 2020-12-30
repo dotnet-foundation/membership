@@ -1609,3 +1609,7 @@ p.profile-location, p.profile-company {
 .btn {
     font-size: 18px;
 }
+
+.form-control {
+  height: auto;
+}
