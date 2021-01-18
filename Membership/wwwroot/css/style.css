@@ -244,11 +244,7 @@ p > a {
     p > a:hover {
         color: #e2068c;
     }
-
-.page-section--purple p > a, .page-section--purple p > a:visited {
-    color: #e2068c;
-}
-
+    
 img {
     max-width: 100%;
 }
@@ -289,10 +285,10 @@ svg.svg-inline--fa {
     color: #fff;
 }
 
-    .site-button--pink:hover {
-        color: #e2068c;
-        background-color: #ebe0eb;
-    }
+.site-button--pink:hover {
+    color: #e2068c;
+    background-color: #ebe0eb;
+}
 
 .site-button--orange {
     border: 2px solid #ff6a00;
