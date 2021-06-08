@@ -43,7 +43,7 @@
 
 #home-hero {
     width: 100vw;
-    margin-left: calc((100vw - 1140px)/2*-1);
+    margin-left: calc((100vw - 1140px) / 2 * -1);
 }
 
 #home-hero_container {
@@ -111,10 +111,10 @@
     line-height: 1.2;
 }
 
-    .home-DATS-title strong {
-        display: block;
-        font-size: 3rem;
-    }
+.home-DATS-title strong {
+    display: block;
+    font-size: 3rem;
+}
 
 .home-DATS-date {
     color: #fff;
@@ -130,9 +130,9 @@
         font-size: 3rem;
     }
 
-        .home-DATS-title strong {
-            font-size: 4rem;
-        }
+    .home-DATS-title strong {
+        font-size: 4rem;
+    }
 
     .home-DATS-date {
         font-size: 2.5rem;
@@ -189,7 +189,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: calc(41.666667% + (100vw - 960px)/12);
+    width: calc(41.666667% + (100vw - 960px) / 12);
     height: 100%;
     background: #fff;
     background: rgba(255, 255, 255, 0.8);
@@ -231,7 +231,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: calc(41.666667% + (100vw - 960px)/12);
+    width: calc(41.666667% + (100vw - 960px) / 12);
     height: 100%;
     background: #fff;
     background: rgba(255, 255, 255, 0.8);
@@ -273,7 +273,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: calc(41.666667% + (100vw - 960px)/12);
+    width: calc(41.666667% + (100vw - 960px) / 12);
     height: 100%;
     background: #fff;
     background: rgba(255, 255, 255, 0.8);
