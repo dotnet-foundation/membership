@@ -25,6 +25,9 @@
     <PackageReference Include="Nerdbank.GitVersioning" Version="3.1.91" PrivateAssets="all" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0" />
+
+    <PackageReference Include="System.IO.Pipelines" Version="5.0.1" />
+    
   </ItemGroup>
 
   <ItemGroup>
