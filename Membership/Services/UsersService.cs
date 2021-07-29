@@ -72,28 +72,34 @@ namespace Membership.Services
             try
             {
                 var photo = await _graphApplicationClient.Users[id].Photo.Request().GetAsync();
-                user.Photo = photo;
-
-                // got a photo, now get the contents
-                // Get my photo.
-                using (var photoStream = await _graphApplicationClient.Users[id].Photo.Content.Request().GetAsync())
+                if (photo != null)
                 {
-                    if (photoStream != null)
-                    {
+                    user.Photo = photo;
 
-                        // Get byte[] for display.
-                        using (var reader = new BinaryReader(photoStream))
+                    // got a photo, now get the contents
+                    // Get my photo.
+                    using (var photoStream = await _graphApplicationClient.Users[id].Photo.Content.Request().GetAsync())
+                    {
+                        if (photoStream != null)
                         {
-                            var data = reader.ReadBytes((int)photoStream.Length);
-                            user.Photo.AdditionalData["data"] = data;
+
+                            // Get byte[] for display.
+                            using (var reader = new BinaryReader(photoStream))
+                            {
+                                var data = reader.ReadBytes((int)photoStream.Length);
+                                user.Photo.AdditionalData["data"] = data;
+                            }
                         }
                     }
                 }
-
             }
             catch (ServiceException)
             {
                 // not present
+            }
+            catch(NullReferenceException)
+            {
+                // Stems from something in graph when the photo is missing
             }
 
             return FromUser(user);
