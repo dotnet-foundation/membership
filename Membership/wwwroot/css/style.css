@@ -1627,3 +1627,8 @@ p.profile-location, p.profile-company {
 .form-control {
     height: auto;
 }
+
+.btn-primary {
+    background-color: #0071EB;
+    border-color: #0071EB;
+}
