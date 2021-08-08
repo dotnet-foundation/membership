@@ -1632,3 +1632,7 @@ p.profile-location, p.profile-company {
     background-color: #0071EB;
     border-color: #0071EB;
 }
+
+.text-info {
+    color: #128091!important;
+}
