@@ -181,61 +181,62 @@
         </div>
     </header>
 
-    <div id="site_wrapper" class="container-fluid cs-container flex-fill">
-        <main id="site_container" role="main" class="order-3">
+    <main id="site_wrapper" class="container-fluid cs-container flex-fill">
+        <div id="site_container" role="main" class="order-3">
             <section class="body-section">
                 <div class="body-container">
                     @RenderBody()
                 </div>
             </section>
-        </main>
-        <!-- Footer -->
-        <footer id="site-footer" class="sticky-bottom h-card">
-            <data class="u-url" href=""></data>
-            <div id="site-footer_container" class="container">
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer id="site-footer" class="sticky-bottom h-card">
+        <data class="u-url" href=""></data>
+        <div id="site-footer_container" class="container">
+            <div class="site-footer_row row">
+                <div class="col-12 d-flex justify-content-between align-items-center">
+                    <img src="/img/logo_v4.svg" class="logo-footer" alt=".NET Foundation">
+                    <ul id="site-footer_menu" class="align-self-end">
+                        <li>
+                            <a class="fab fa-github-square fa-3x" href="https://github.com/dotnet-foundation" target="_blank" alt="GitHub" aria-label="Find us on GitHub"></a>
+                            <a class="fab fa-twitter-square fa-3x" href="https://twitter.com/dotnetfdn" target="_blank" alt="Twitter" aria-label="Find us on Twitter"></a>
+                            <a class="fab fa-youtube-square fa-3x" href="https://www.youtube.com/channel/UCiaZbznpWV1o-KLxj8zqR6A" target="_blank" alt="YouTube" aria-label="Find us on YouTube"></a>
+                            <a class="fab fa-facebook-square fa-3x" href="https://www.facebook.com/dotnetfoundation/" target="_blank" alt="Facebook" aria-label="Find us on Facebook"></a>
+                            <a class="fab fa-linkedin-in fa-3x" href="https://www.linkedin.com/company/dotnetfoundation/" target="_blank" alt="LinkedIn" aria-label="Find us on LinkedIn"></a>
+                        </li>
+                        <li><a href="/about/privacy-policy">Privacy Policy</a></li>
+                        <li><a href="/about/code-of-conduct">Code of Conduct</a></li>
+                        <li><a href="https://github.com/dotnet-foundation/membership/issues">Site Problem?</a></li>
+                        <partial name="_LoginPartial" />
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div id="site-footer_bookend" class="">
+            <div class="site-footer_container container">
                 <div class="site-footer_row row">
-                    <div class="col-12 d-flex justify-content-between align-items-center">
-                        <img src="/img/logo_v4.svg" class="logo-footer" alt=".NET Foundation">
-                        <ul id="site-footer_menu" class="align-self-end">
-                            <li>
-                                <a class="fab fa-github-square fa-3x" href="https://github.com/dotnet-foundation" target="_blank" alt="GitHub" aria-label="Find us on GitHub"></a>
-                                <a class="fab fa-twitter-square fa-3x" href="https://twitter.com/dotnetfdn" target="_blank" alt="Twitter" aria-label="Find us on Twitter"></a>
-                                <a class="fab fa-youtube-square fa-3x" href="https://www.youtube.com/channel/UCiaZbznpWV1o-KLxj8zqR6A" target="_blank" alt="YouTube" aria-label="Find us on YouTube"></a>
-                                <a class="fab fa-facebook-square fa-3x" href="https://www.facebook.com/dotnetfoundation/" target="_blank" alt="Facebook" aria-label="Find us on Facebook"></a>
-                                <a class="fab fa-linkedin-in fa-3x" href="https://www.linkedin.com/company/dotnetfoundation/" target="_blank" alt="LinkedIn" aria-label="Find us on LinkedIn"></a>
-                            </li>
-                            <li><a href="/about/privacy-policy">Privacy Policy</a></li>
-                            <li><a href="/about/code-of-conduct">Code of Conduct</a></li>
-                            <li><a href="https://github.com/dotnet-foundation/membership/issues">Site Problem?</a></li>
-                            <partial name="_LoginPartial" />
-                        </ul>
+                    <div class="col-12 d-flex justify-content-end">
+                        <p class="site-footer_textSection">
+                            &copy; @DateTime.Now.Year .NET Foundation and Contributors.
+                        </p>
+                    </div>
+                    <div class="col-12 d-flex justify-content-end">
+                        <p class="site-footer_textSection">
+                            You can <a href="https://github.com/dotnet-foundation/membership">contribute to this site on GitHub.</a>
+                        </p>
+                    </div>
+                    <div class="col-12 d-flex justify-content-end">
+                      <p class="site-footer_textSection">
+                        Generated by <a href="https://statiq.dev/web">Statiq Web</a>.
+                      </p>
                     </div>
                 </div>
             </div>
-            <div id="site-footer_bookend" class="">
-                <div class="site-footer_container container">
-                    <div class="site-footer_row row">
-                        <div class="col-12 d-flex justify-content-end">
-                            <p class="site-footer_textSection">
-                                &copy; @DateTime.Now.Year .NET Foundation and Contributors.
-                            </p>
-                        </div>
-                        <div class="col-12 d-flex justify-content-end">
-                            <p class="site-footer_textSection">
-                                You can <a href="https://github.com/dotnet-foundation/membership">contribute to this site on GitHub.</a>
-                            </p>
-                        </div>
-                        <div class="col-12 d-flex justify-content-end">
-                          <p class="site-footer_textSection">
-                            Generated by <a href="https://statiq.dev/web">Statiq Web</a>.
-                          </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </footer>
-        <!-- Footer End -->
-    </div>
+        </div>
+    </footer>
+    <!-- Footer End -->
 
 
     <partial name="_CookieConsentPartial" />
