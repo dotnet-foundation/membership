@@ -633,6 +633,10 @@ li.active a.nav-link,
     .flash .alert a {
         font-size: 16px;
     }
+
+    .flash .alert {
+        padding-right: 3.5rem;
+    }
 }
 
 #site-footer_container {
