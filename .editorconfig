@@ -1,4 +1,4 @@
-# EditorConfig is awesome:http://EditorConfig.org
+# EditorConfig is awesome:https://EditorConfig.org
 # From https://raw.githubusercontent.com/dotnet/roslyn/master/.editorconfig
 
 # top-most EditorConfig file
@@ -206,7 +206,7 @@ csharp_style_expression_bodied_properties = true:none
 csharp_style_expression_bodied_indexers = true:none
 csharp_style_expression_bodied_accessors = true:none
 
-# Expression 
+# Expression
 csharp_prefer_simple_default_expression = true:suggestion
 csharp_style_deconstructed_variable_declaration = true:suggestion
 csharp_style_pattern_local_over_anonymous_function = true:suggestion
